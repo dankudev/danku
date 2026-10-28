@@ -1,23 +1,11 @@
 import { spawn } from "node:child_process";
 import { readdir, readFile, rm, writeFile } from "node:fs/promises";
 import { join, resolve } from "node:path";
-import { parseArgs } from "node:util";
 
-export const PRESETS = ["saas", "saas-split"] as const;
-export type Preset = (typeof PRESETS)[number];
+import { CliError, runProgram } from "@dankudev/cli-kit";
+import { Argument, Command, InvalidArgumentError } from "commander";
 
-export interface Options {
-  name: string;
-  preset?: Preset;
-}
-
-export const USAGE = `Usage: create-danku <name> [--preset ${PRESETS.join("|")}]`;
-
-/** An expected failure: its message is printed without a stack trace. */
-export class CliError extends Error {}
-
-/** Thrown for invalid arguments; printed together with the usage. */
-export class UsageError extends CliError {}
+import pkg from "../package.json" with { type: "json" };
 
 /** Runs a command in `cwd`; tests replace it so nothing is spawned. */
 export type Run = (command: string, args: string[], cwd: string) => Promise<void>;
@@ -42,54 +30,6 @@ export const spawnRun: Run = (command, args, cwd) =>
         );
     });
   });
-
-/** Fails when `directory` exists and has entries; a missing or empty directory is fine. */
-export async function assertEmptyDirectory(directory: string): Promise<void> {
-  let entries: string[];
-  try {
-    entries = await readdir(directory);
-  } catch (error) {
-    const { code } = error as NodeJS.ErrnoException;
-    if (code === "ENOENT") return;
-    if (code === "ENOTDIR")
-      throw new CliError(`${directory} already exists and is not a directory`);
-    throw error;
-  }
-  if (entries.length > 0) {
-    throw new CliError(`Directory ${directory} already exists and is not empty`);
-  }
-}
-
-/** Parses and validates the command line arguments (without the node and script paths). */
-export function parse(argv: string[]): Options {
-  let parsed;
-  try {
-    parsed = parseArgs({
-      args: argv,
-      allowPositionals: true,
-      options: { preset: { type: "string" } },
-    });
-  } catch (error) {
-    throw new UsageError((error as Error).message);
-  }
-
-  const { positionals, values } = parsed;
-  if (positionals.length !== 1) throw new UsageError("Expected exactly one project name");
-  const [name] = positionals;
-  if (!/^[a-z0-9][a-z0-9-]*$/.test(name)) {
-    throw new UsageError(
-      `Invalid project name "${name}": use lowercase letters, digits and dashes`,
-    );
-  }
-
-  const { preset } = values;
-  if (preset === undefined) return { name };
-  if (!(PRESETS as readonly string[]).includes(preset)) {
-    throw new UsageError(`Unknown preset "${preset}"`);
-  }
-  // Presets are recognized now so the flag is stable; they are implemented in later steps.
-  throw new UsageError(`Preset "${preset}" is not available yet`);
-}
 
 async function readJson<T>(file: string): Promise<T> {
   return JSON.parse(await readFile(file, "utf8")) as T;
@@ -126,81 +66,6 @@ async function appendLines(file: string, lines: string[]): Promise<void> {
   await writeFile(file, `${text.trimEnd()}\n${lines.join("\n")}\n`);
 }
 
-/** Sample packages `vp create vite:monorepo` generates; danku adds its own apps instead. */
-export const SAMPLE_PACKAGES = ["apps/website", "packages/utils"];
-
-/** Node versions generated projects support: Node 24 LTS from the first release Vitest 5 runs on. */
-export const NODE_ENGINE = ">=24.11.0";
-
-/** The only root script: `vp config` installs the commit hooks after `vp install`. */
-export const ROOT_SCRIPTS = { prepare: "vp config" };
-
-/**
- * Removes the sample packages, replaces the root scripts with {@link ROOT_SCRIPTS}
- * and sets the root `engines.node` to {@link NODE_ENGINE}.
- */
-export async function cleanMonorepo(directory: string): Promise<void> {
-  for (const path of SAMPLE_PACKAGES) {
-    await rm(join(directory, path), { recursive: true, force: true });
-  }
-
-  const file = join(directory, "package.json");
-  const pkg = await readJson<{
-    scripts?: Record<string, string>;
-    engines?: Record<string, string>;
-  }>(file);
-  pkg.scripts = { ...ROOT_SCRIPTS };
-  pkg.engines = { ...pkg.engines, node: NODE_ENGINE };
-  await writeJson(file, pkg);
-}
-
-/** `sv` release that `vp create svelte@…` runs; bump it deliberately, later cleanup depends on its output. */
-export const SV_VERSION = "1.1.1";
-
-/** The SvelteKit app; inside a monorepo `vp create` places it under `apps/`. */
-export const APP_NAME = "web";
-
-/** Official `sv add` add-ons with their options, one argument each (no shell, so no quotes). */
-export const SVELTEKIT_ADD_ONS = [
-  "enhanced-img",
-  "experimental=features:async,remoteFunctions",
-  "mdsvex",
-  "sveltekit-adapter=adapter:cloudflare+cfTarget:workers",
-  "tailwindcss=plugins:typography,forms",
-];
-
-const VITE_DEFINE_CONFIG = 'import { defineConfig } from "vite";';
-
-/**
- * Workaround: `vp create` converts third-party templates only partly and leaves `defineConfig`
- * imported from "vite", which the `vite-plus/prefer-vite-plus-imports` lint rule rejects. It is
- * the only change `vp migrate` would make here. Remove once `vp create` does this itself.
- */
-export async function useVitePlusDefineConfig(file: string): Promise<void> {
-  await replaceOnce(file, VITE_DEFINE_CONFIG, 'import { defineConfig } from "vite-plus";');
-}
-
-/** The `prepare` script sv generates. */
-const SV_PREPARE = "svelte-kit sync || echo ''";
-
-/** Also writes the gitignored Worker types; pnpm runs it whenever an install changes dependencies. */
-export const APP_PREPARE = "svelte-kit sync && wrangler types || echo ''";
-
-/** The `check` script sv generates. */
-const SV_CHECK =
-  "wrangler types --check && svelte-kit sync && svelte-check --tsconfig ./tsconfig.json";
-
-/** Also formats and lints the app; warnings fail it, as in CI. */
-export const APP_CHECK = `vp check --deny-warnings && ${SV_CHECK}`;
-
-/**
- * Dev dependencies sv pins itself; the workspace catalog pins them for every package instead.
- * Only the ones the app has are moved: `@types/node` comes with some add-ons only. `typescript`
- * stays on sv's 6.x: `svelte-kit sync` reads tsconfig through the TypeScript JS API, which the
- * catalog's TypeScript 7 does not provide yet.
- */
-export const CATALOG_DEPENDENCIES = ["@types/node"];
-
 /** Replaces a package.json script; fails loudly when sv generated a different one. */
 async function replaceScript(
   file: string,
@@ -217,171 +82,217 @@ async function replaceScript(
   await writeJson(file, pkg);
 }
 
-/** Runs `vp check` in `check` and moves catalog dependencies to the catalog. */
-export async function updateAppPackage(appDirectory: string): Promise<void> {
-  const file = join(appDirectory, "package.json");
-  await replaceScript(file, "check", SV_CHECK, APP_CHECK);
-  const pkg = await readJson<{ devDependencies?: Record<string, string> }>(file);
-  const devDependencies = pkg.devDependencies ?? {};
-  for (const name of CATALOG_DEPENDENCIES) {
-    if (devDependencies[name]) devDependencies[name] = "catalog:";
-  }
-  await writeJson(file, pkg);
-}
+/** The SvelteKit app; inside a monorepo `vp create` places it under `apps/`. */
+const APP_NAME = "web";
 
-/** Generates the Worker types in `prepare`, so every install that changes dependencies refreshes them. */
-export async function generateWorkerTypes(appDirectory: string): Promise<void> {
-  await replaceScript(join(appDirectory, "package.json"), "prepare", SV_PREPARE, APP_PREPARE);
-}
-
-/** `wrangler types` output: regenerated by `prepare`, so it is not committed. */
-export async function ignoreWorkerTypes(appDirectory: string): Promise<void> {
-  await appendLines(join(appDirectory, ".gitignore"), [
-    "",
-    "# Worker types, generated by the prepare script",
-    "worker-configuration.d.ts",
-  ]);
-}
-
-/** sv names the Worker after the app folder, so every project would deploy over the same Worker. */
-export async function nameWorker(appDirectory: string, workerName: string): Promise<void> {
-  await replaceOnce(
-    join(appDirectory, "wrangler.jsonc"),
-    `"name": ${JSON.stringify(APP_NAME)}`,
-    `"name": ${JSON.stringify(workerName)}`,
-  );
-}
+/** The `check` script sv generates. */
+const SV_CHECK =
+  "wrangler types --check && svelte-kit sync && svelte-check --tsconfig ./tsconfig.json";
 
 /**
- * Approves wrangler's esbuild install script (pnpm fails installs with unapproved build scripts,
- * and `vp create` approves only sharp and workerd), and makes `pnpm install` fail on a Node version
- * outside `engines` (pnpm ignores the app's .npmrc).
+ * Entry point of `create-danku`: the only place the program is built and parsed. Returns the
+ * exit code; expected failures are printed without a stack trace.
  */
-export async function configureWorkspace(directory: string): Promise<void> {
-  const file = join(directory, "pnpm-workspace.yaml");
-  await replaceOnce(file, "allowBuilds:", "allowBuilds:\n  esbuild: true");
-  await appendLines(file, ["engineStrict: true"]);
-}
-
-/**
- * VS Code only reads .vscode in the opened folder, so the app's extension recommendations and
- * settings move to the monorepo root (root settings win) and the app's .vscode is removed.
- */
-export async function mergeEditorSettings(directory: string, appDirectory: string): Promise<void> {
-  const root = join(directory, ".vscode");
-  const app = join(appDirectory, ".vscode");
-
-  const appExtensions = await readOptionalJson<{ recommendations?: string[] }>(
-    join(app, "extensions.json"),
-  );
-  if (appExtensions?.recommendations) {
-    const file = join(root, "extensions.json");
-    const extensions = await readJson<{ recommendations?: string[] }>(file);
-    extensions.recommendations = [
-      ...new Set([...(extensions.recommendations ?? []), ...appExtensions.recommendations]),
-    ];
-    await writeJson(file, extensions);
-  }
-
-  const appSettings = await readOptionalJson<Record<string, unknown>>(join(app, "settings.json"));
-  if (appSettings) {
-    const file = join(root, "settings.json");
-    const settings = await readJson<Record<string, unknown>>(file);
-    for (const [key, value] of Object.entries(appSettings)) settings[key] ??= value;
-    await writeJson(file, settings);
-  }
-
-  await rm(app, { recursive: true, force: true });
-}
-
-/** sv files the monorepo replaces: an .npmrc pnpm ignores in workspace packages, an empty `$lib` index. */
-export const APP_LEFTOVERS = [".npmrc", "src/lib/index.ts"];
-
-/**
- * `vp fmt` skips .svelte files unless `fmt.svelte` is set, and sorts imports only with
- * `sortImports` (groups, then alphabetical) in the root config.
- */
-export async function configureFormatter(directory: string): Promise<void> {
-  await replaceOnce(
-    join(directory, "vite.config.ts"),
-    "fmt: {}",
-    "fmt: { svelte: {}, sortImports: true }",
-  );
-}
-
-/**
- * sv enables only AsyncLocalStorage, which SvelteKit itself needs; full Node.js compatibility also
- * covers npm packages that use Node APIs (payment SDKs, auth libraries, API clients).
- */
-export async function enableNodejsCompat(appDirectory: string): Promise<void> {
-  await replaceOnce(join(appDirectory, "wrangler.jsonc"), '"nodejs_als"', '"nodejs_compat"');
-}
-
-/** CLI entry: returns the process exit code instead of exiting, so tests can call it. */
 export async function main(argv: string[], run: Run = spawnRun): Promise<number> {
-  try {
-    const { name } = parse(argv);
-    const cwd = process.cwd();
-    const directory = resolve(cwd, name);
-    await assertEmptyDirectory(directory);
-    await run(
-      "vp",
-      [
-        "create",
-        "vite:monorepo",
-        "--no-interactive",
-        "--directory",
-        name,
-        "--git",
-        "--editor",
-        "vscode",
-        "--hooks",
-        "--package-manager",
-        "pnpm",
-      ],
-      cwd,
-    );
-    await cleanMonorepo(directory);
-    // vp passes --no-install to sv, converts the app to Vite+, then installs and formats the workspace.
-    await run(
-      "vp",
-      [
-        "create",
-        `svelte@${SV_VERSION}`,
-        "--no-interactive",
-        "--",
-        APP_NAME,
-        "--template",
-        "minimal",
-        "--types",
-        "ts",
-        "--add",
-        ...SVELTEKIT_ADD_ONS,
-      ],
-      directory,
-    );
-    const app = join(directory, "apps", APP_NAME);
-    await useVitePlusDefineConfig(join(app, "vite.config.ts"));
-    await updateAppPackage(app);
+  // A fresh program per run: Commander stores parsed option values on the command object.
+  const program = new Command("create-danku")
+    .description(
+      "Create a danku project: a Vite+ monorepo with a SvelteKit app on Cloudflare Workers",
+    )
+    .version(pkg.version)
+    .addArgument(
+      new Argument(
+        "<name>",
+        "Project name and directory: lowercase letters, digits and dashes",
+      ).argParser((name) => {
+        // Commander reports this message as an invalid argument.
+        if (!/^[a-z0-9][a-z0-9-]*$/.test(name)) {
+          throw new InvalidArgumentError("Use lowercase letters, digits and dashes.");
+        }
+        return name;
+      }),
+    )
+    .addArgument(
+      new Argument("<preset>", "What the project is for").choices(["local-business", "saas"]),
+    )
+    .action(async (name: string, preset: string) => {
+      const cwd = process.cwd();
+      const directory = resolve(cwd, name);
+      const app = join(directory, "apps", APP_NAME);
 
-    // Cloudflare: app-level Worker setup, candidates for a @dankudev/iac sv add-on.
-    await generateWorkerTypes(app);
-    await ignoreWorkerTypes(app);
-    await nameWorker(app, `${name}-${APP_NAME}`);
-    await enableNodejsCompat(app);
+      // The target directory may be missing or empty, nothing else.
+      const entries = await readdir(directory).catch((error: NodeJS.ErrnoException) => {
+        if (error.code === "ENOENT") return [];
+        if (error.code === "ENOTDIR") {
+          throw new CliError(`${directory} already exists and is not a directory`);
+        }
+        throw error;
+      });
+      if (entries.length > 0) {
+        throw new CliError(`Directory ${directory} already exists and is not empty`);
+      }
 
-    await mergeEditorSettings(directory, app);
-    for (const path of APP_LEFTOVERS) await rm(join(app, path), { force: true });
-    await configureWorkspace(directory);
-    await configureFormatter(directory);
-    await run("vp", ["install"], directory);
-    await run("vp", ["fmt"], directory);
-    return 0;
-  } catch (error) {
-    // Anything else is a bug: rethrow it so the stack trace is printed.
-    if (!(error instanceof CliError)) throw error;
-    console.error(error.message);
-    if (error instanceof UsageError) console.error(USAGE);
-    return 1;
-  }
+      await run(
+        "vp",
+        [
+          "create",
+          "vite:monorepo",
+          "--no-interactive",
+          "--directory",
+          name,
+          "--git",
+          "--editor",
+          "vscode",
+          "--hooks",
+          "--package-manager",
+          "pnpm",
+        ],
+        cwd,
+      );
+
+      // Remove the sample packages; danku adds its own apps instead.
+      for (const path of ["apps/website", "packages/utils"]) {
+        await rm(join(directory, path), { recursive: true, force: true });
+      }
+      const rootPackageFile = join(directory, "package.json");
+      const rootPackage = await readJson<{
+        scripts?: Record<string, string>;
+        engines?: Record<string, string>;
+      }>(rootPackageFile);
+      // The only root script: `vp config` installs the commit hooks after `vp install`.
+      rootPackage.scripts = { prepare: "vp config" };
+      // Node 24 LTS from the first release Vitest 5 runs on.
+      rootPackage.engines = { ...rootPackage.engines, node: ">=24.11.0" };
+      await writeJson(rootPackageFile, rootPackage);
+
+      // vp passes --no-install to sv, converts the app to Vite+, then installs and formats the workspace.
+      await run(
+        "vp",
+        [
+          "create",
+          // Bump sv deliberately: the edits below depend on its output.
+          "svelte@1.1.1",
+          "--no-interactive",
+          "--",
+          APP_NAME,
+          "--template",
+          "minimal",
+          "--types",
+          "ts",
+          // Official `sv add` add-ons with their options, one argument each (no shell, so no quotes).
+          "--add",
+          "enhanced-img",
+          "experimental=features:async,remoteFunctions",
+          "mdsvex",
+          "sveltekit-adapter=adapter:cloudflare+cfTarget:workers",
+          "tailwindcss=plugins:typography,forms",
+        ],
+        directory,
+      );
+
+      // Workaround: `vp create` converts third-party templates only partly and leaves `defineConfig`
+      // imported from "vite", which the `vite-plus/prefer-vite-plus-imports` lint rule rejects. It is
+      // the only change `vp migrate` would make here. Remove once `vp create` does this itself.
+      await replaceOnce(
+        join(app, "vite.config.ts"),
+        'import { defineConfig } from "vite";',
+        'import { defineConfig } from "vite-plus";',
+      );
+
+      // `check` also formats and lints the app; warnings fail it, as in CI.
+      const appPackageFile = join(app, "package.json");
+      await replaceScript(
+        appPackageFile,
+        "check",
+        SV_CHECK,
+        `vp check --deny-warnings && ${SV_CHECK}`,
+      );
+      // The workspace catalog pins `@types/node` for every package; it comes with some add-ons only.
+      // `typescript` stays on sv's 6.x: `svelte-kit sync` reads tsconfig through the TypeScript JS
+      // API, which the catalog's TypeScript 7 does not provide yet.
+      const appPackage = await readJson<{ devDependencies?: Record<string, string> }>(
+        appPackageFile,
+      );
+      if (appPackage.devDependencies?.["@types/node"]) {
+        appPackage.devDependencies["@types/node"] = "catalog:";
+      }
+      await writeJson(appPackageFile, appPackage);
+
+      // Cloudflare: app-level Worker setup, candidates for a @dankudev/iac sv add-on.
+      // Generate the Worker types in `prepare`, so every install that changes dependencies refreshes them.
+      await replaceScript(
+        appPackageFile,
+        "prepare",
+        "svelte-kit sync || echo ''",
+        "svelte-kit sync && wrangler types || echo ''",
+      );
+      // `wrangler types` output: regenerated by `prepare`, so it is not committed.
+      await appendLines(join(app, ".gitignore"), [
+        "",
+        "# Worker types, generated by the prepare script",
+        "worker-configuration.d.ts",
+      ]);
+      // sv names the Worker after the app folder, so every project would deploy over the same Worker.
+      const wranglerFile = join(app, "wrangler.jsonc");
+      await replaceOnce(
+        wranglerFile,
+        `"name": ${JSON.stringify(APP_NAME)}`,
+        `"name": ${JSON.stringify(`${name}-${APP_NAME}`)}`,
+      );
+      // sv enables only AsyncLocalStorage, which SvelteKit itself needs; full Node.js compatibility
+      // also covers npm packages that use Node APIs (payment SDKs, auth libraries, API clients).
+      await replaceOnce(wranglerFile, '"nodejs_als"', '"nodejs_compat"');
+
+      // VS Code only reads .vscode in the opened folder, so the app's extension recommendations and
+      // settings move to the monorepo root (root settings win) and the app's .vscode is removed.
+      const rootVscode = join(directory, ".vscode");
+      const appVscode = join(app, ".vscode");
+      const appExtensions = await readOptionalJson<{ recommendations?: string[] }>(
+        join(appVscode, "extensions.json"),
+      );
+      if (appExtensions?.recommendations) {
+        const file = join(rootVscode, "extensions.json");
+        const extensions = await readJson<{ recommendations?: string[] }>(file);
+        extensions.recommendations = [
+          ...new Set([...(extensions.recommendations ?? []), ...appExtensions.recommendations]),
+        ];
+        await writeJson(file, extensions);
+      }
+      const appSettings = await readOptionalJson<Record<string, unknown>>(
+        join(appVscode, "settings.json"),
+      );
+      if (appSettings) {
+        const file = join(rootVscode, "settings.json");
+        const settings = await readJson<Record<string, unknown>>(file);
+        for (const [key, value] of Object.entries(appSettings)) settings[key] ??= value;
+        await writeJson(file, settings);
+      }
+      await rm(appVscode, { recursive: true, force: true });
+
+      // sv files the monorepo replaces: an .npmrc pnpm ignores in workspace packages, an empty `$lib` index.
+      for (const path of [".npmrc", "src/lib/index.ts"]) await rm(join(app, path), { force: true });
+
+      // Approve wrangler's esbuild install script (pnpm fails installs with unapproved build scripts,
+      // and `vp create` approves only sharp and workerd), and make `pnpm install` fail on a Node
+      // version outside `engines` (pnpm ignores the app's .npmrc).
+      const workspaceFile = join(directory, "pnpm-workspace.yaml");
+      await replaceOnce(workspaceFile, "allowBuilds:", "allowBuilds:\n  esbuild: true");
+      await appendLines(workspaceFile, ["engineStrict: true"]);
+
+      // `vp fmt` skips .svelte files unless `fmt.svelte` is set, and sorts imports only with
+      // `sortImports` (groups, then alphabetical) in the root config.
+      await replaceOnce(
+        join(directory, "vite.config.ts"),
+        "fmt: {}",
+        "fmt: { svelte: {}, sortImports: true }",
+      );
+
+      await run("vp", ["install"], directory);
+      await run("vp", ["fmt"], directory);
+
+      // Both presets create the same base project for now; their add-ons come in later steps.
+      console.log(`Created ${name} with the ${preset} preset`);
+    });
+
+  return runProgram(program, argv);
 }

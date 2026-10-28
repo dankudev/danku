@@ -3,21 +3,12 @@
 Create a danku project.
 
 ```bash
-pnpm create @dankudev my-app
-pnpm dlx @dankudev/create my-app
-vp create @dankudev -- my-app
+pnpm create @dankudev my-app saas
+pnpm dlx @dankudev/create my-app saas
+vp create @dankudev -- my-app saas
 ```
 
-## Options
+## Arguments
 
 - `<name>`: project and directory name (lowercase letters, digits and dashes).
-- `--preset saas|saas-split`: optional; not available yet.
-
-## Development
-
-```bash
-vp install
-vp test
-vp pack
-node bin/create.mjs my-app
-```
+- `<preset>`: what the project is for, `local-business` or `saas`. Both create the same base project for now; their add-ons come later.
