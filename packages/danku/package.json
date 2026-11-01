@@ -1,15 +1,17 @@
 {
-  "name": "@dankudev/create",
+  "name": "@dankudev/danku",
   "version": "0.0.0",
-  "description": "Create a danku project: a Vite+ monorepo with a SvelteKit app on Cloudflare Workers.",
+  "description": "Create danku projects and deploy them: infrastructure as TypeScript, without a state file.",
   "keywords": [
     "cloudflare",
     "create",
     "danku",
+    "infrastructure-as-code",
     "sveltekit",
+    "typescript",
     "vite-plus"
   ],
-  "homepage": "https://github.com/dankudev/danku/tree/main/packages/create#readme",
+  "homepage": "https://github.com/dankudev/danku/tree/main/packages/danku#readme",
   "bugs": {
     "url": "https://github.com/dankudev/danku/issues"
   },
@@ -18,10 +20,10 @@
   "repository": {
     "type": "git",
     "url": "git+https://github.com/dankudev/danku.git",
-    "directory": "packages/create"
+    "directory": "packages/danku"
   },
   "bin": {
-    "create-danku": "./bin/create-danku.mjs"
+    "danku": "./bin/danku.mjs"
   },
   "files": [
     "bin",
@@ -30,6 +32,7 @@
   "type": "module",
   "exports": {
     ".": "./dist/index.mjs",
+    "./deploy/cloudflare": "./dist/deploy/cloudflare.mjs",
     "./package.json": "./package.json"
   },
   "publishConfig": {
@@ -40,12 +43,16 @@
     "dev": "vp pack --watch",
     "test": "vp test",
     "check": "vp check",
+    "openapi": "kubb generate",
     "prepublishOnly": "vp run build"
   },
   "devDependencies": {
-    "@dankudev/cli-kit": "workspace:*",
+    "@kubb/parser-ts": "catalog:",
+    "@kubb/plugin-fetch": "catalog:",
+    "@kubb/plugin-ts": "catalog:",
     "@types/node": "catalog:",
     "commander": "catalog:",
+    "kubb": "catalog:",
     "typescript": "catalog:",
     "vite-plus": "catalog:"
   },
