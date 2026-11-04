@@ -32,27 +32,17 @@ export async function deploy(): Promise<void> {
     }
   }
 
-  // Other projects' resources in the same account are never shown or touched.
   const found = (
     await Promise.all(
-      active.map(async (kind) =>
-        (await kind.list())
-          .filter(({ owner }) => owner.project === project)
-          .map((existing) => ({ ...existing, kind })),
-      ),
+      active.map(async (kind) => (await kind.list()).map((existing) => ({ ...existing, kind }))),
     )
   ).flat();
+  // Other projects' resources in the same account are never shown or touched.
+  const owned = found.flatMap(({ owner, ...existing }) =>
+    owner?.project === project ? [{ ...existing, owner }] : [],
+  );
 
   const steps = declared.map((resource) => {
-    const matches = found.filter(
-      ({ kind, owner }) => resource instanceof kind && owner.name === resource.name,
-    );
-    if (matches.length > 1) {
-      throw new CliError(
-        `${resource.constructor.name} "${resource.name}" exists ${matches.length} times in the cloud; delete the extra copies`,
-      );
-    }
-    const [match] = matches;
     // Resources other resources point at (`bindings: { DB: db }`) count by name: their id and
     // outputs are set during the run and would change the hash between two identical deploys.
     const inputs = JSON.stringify(resource.inputs, (_, value: unknown) =>
@@ -63,6 +53,28 @@ export async function deploy(): Promise<void> {
       name: resource.name,
       hash: createHash("sha256").update(inputs).digest("hex").slice(0, 16),
     };
+    const matches = owned.filter(
+      ({ kind, owner }) => resource instanceof kind && owner.name === resource.name,
+    );
+    if (matches.length > 1) {
+      throw new CliError(
+        `${resource.constructor.name} "${resource.name}" exists ${matches.length} times in the cloud; delete the extra copies`,
+      );
+    }
+    const [match] = matches;
+    // danku only touches what it created: a resource that already has the name it would create
+    // stops the deploy before any change. Only kinds with unique names list untagged ones.
+    const taken = match
+      ? undefined
+      : found.find(({ kind, name }) => resource instanceof kind && name === cloudName(owner));
+    if (taken) {
+      throw new CliError(
+        `${resource.constructor.name} "${resource.name}": ${cloudName(owner)} already exists, ` +
+          (taken.owner
+            ? `and belongs to the danku project "${taken.owner.project}"`
+            : "but danku didn't create it (it has no danku tags); remove it or rename the resource in danku/deploy.ts"),
+      );
+    }
     if (match) {
       resource.id = match.id;
       resource.outputs = match.outputs;
@@ -70,7 +82,7 @@ export async function deploy(): Promise<void> {
     const change = !match ? "create" : match.owner.hash === owner.hash ? "none" : "update";
     return { resource, owner, change };
   });
-  const orphans = found.filter(
+  const orphans = owned.filter(
     ({ kind, owner }) =>
       !declared.some((resource) => resource instanceof kind && resource.name === owner.name),
   );

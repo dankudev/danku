@@ -20,8 +20,12 @@ export interface Owner {
 export interface Kind {
   /** Applied only when CI=true; in dev, local tools (wrangler/miniflare) provide it. */
   ciOnly: boolean;
-  /** Every danku-owned resource of this kind in the account, across all projects. */
-  list(): Promise<{ id: string; owner: Owner; outputs: unknown }[]>;
+  /**
+   * Resources of this kind that exist in the account: every danku-owned one, across all projects,
+   * with its `owner`. Kinds whose cloud names are unique also return untagged ones, without an
+   * owner, so `danku deploy` can refuse to create a name that's already taken before any change.
+   */
+  list(): Promise<{ id: string; name: string; owner?: Owner; outputs: unknown }[]>;
   /** Missing for data kinds (D1, KV, R2…): their orphans are only reported, never deleted. */
   delete?(id: string): Promise<void>;
 }

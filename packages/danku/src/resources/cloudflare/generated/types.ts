@@ -195,6 +195,42 @@ export type D1DatabaseDetailsResponse = {
   version?: D1DatabaseVersion;
 };
 
+export type D1DatabaseResponse = {
+  /**
+   * @description Specifies the timestamp the resource was created as an ISO8601 string.
+   *
+   * Format: `date-time`
+   * @example 2022-11-15T18:25:44.442097Z
+   * @type string | undefined
+   */
+  readonly created_at?: D1CreatedAt;
+  /**
+   * @description Specify the location to restrict the D1 database to run and store data. If this option is present, the location hint is ignored.
+   * @example eu
+   * @type string | undefined
+   */
+  jurisdiction?: D1JurisdictionNullableKey | null;
+  /**
+   * @description D1 database name.
+   * @pattern ^[a-zA-Z0-9][a-zA-Z0-9_-]*$
+   * @example my-database
+   * @type string | undefined
+   */
+  name?: D1DatabaseName;
+  /**
+   * @description D1 database identifier (UUID).
+   * @example xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+   * @type string | undefined
+   */
+  readonly uuid?: D1DatabaseIdentifier;
+  /**
+   * @pattern ^(alpha|beta|production)$
+   * @example production
+   * @type string | undefined
+   */
+  version?: D1DatabaseVersion;
+};
+
 export const D1ReadReplicationDetailsForRequestModeEnum = {
   auto: 'auto',
   disabled: 'disabled',
@@ -1288,6 +1324,88 @@ export type ResourceTaggingTaggedResourceResponseCollection = ResourceTaggingApi
 export type ResourceTaggingTaggedResourceResponseSingle = ResourceTaggingApiResponseCommon & {
   result?: ResourceTaggingTaggedResourceObject;
 };
+
+export type D1ListDatabasesPath = {
+  /**
+   * @description Account identifier tag.
+   * @maxLength 32
+   * @example 023e105f4ecef8ad9ca31a8372d0c353
+   * @type string
+   */
+  readonly account_id: D1AccountIdentifier;
+};
+
+export type D1ListDatabasesQuery = {
+  /**
+   * @description a database name to search for.
+   * @type string | undefined
+   */
+  name?: string;
+  /**
+   * @description Page number of paginated results.
+   * @minimum 1
+   * @default 1
+   * @type number | undefined
+   */
+  page?: number;
+  /**
+   * @description Number of items per page.
+   * @minimum 10
+   * @maximum 10000
+   * @default 1000
+   * @type number | undefined
+   */
+  per_page?: number;
+};
+
+export type D1ListDatabasesStatus200 = D1ApiResponseCommon & {
+  result?: D1DatabaseResponse[];
+  result_info?: {
+    /**
+     * @description Total number of results for the requested service
+     * @example 1
+     * @type number | undefined
+     */
+    count?: number;
+    /**
+     * @description Current page within paginated list of results
+     * @example 1
+     * @type number | undefined
+     */
+    page?: number;
+    /**
+     * @description Number of results per page of results
+     * @example 20
+     * @type number | undefined
+     */
+    per_page?: number;
+    /**
+     * @description Total results available without any search parameters
+     * @example 2000
+     * @type number | undefined
+     */
+    total_count?: number;
+  };
+};
+
+export type D1ListDatabasesStatus4XX = D1ApiResponseCommonFailure;
+
+export type D1ListDatabasesOptions = {
+  body?: never;
+  path: D1ListDatabasesPath;
+  query?: D1ListDatabasesQuery;
+  headers?: never;
+};
+
+export type D1ListDatabasesResponses = {
+  '200': D1ListDatabasesStatus200;
+  '4XX': D1ListDatabasesStatus4XX;
+};
+
+/**
+ * @description Union of all possible responses
+ */
+export type D1ListDatabasesResponse = D1ListDatabasesStatus200;
 
 export type D1CreateDatabasePath = {
   /**

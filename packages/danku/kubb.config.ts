@@ -8,7 +8,13 @@ process.env.KUBB_DISABLE_TELEMETRY = "1";
 
 // Cloudflare operationIds, as listed in their API docs. Anchored: a plain string matches anywhere,
 // so "tags-list" alone would also pull in "tags-list-keys" and "access-tags-list-tags".
-const include = ["d1-create-database", "tags-get", "tags-set", "tags-list"].map((id) => ({
+const include = [
+  "d1-create-database",
+  "d1-list-databases",
+  "tags-get",
+  "tags-set",
+  "tags-list",
+].map((id) => ({
   type: "operationId" as const,
   pattern: new RegExp(`^${id}$`),
 }));

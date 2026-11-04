@@ -4,7 +4,7 @@
 */
 
 import type { ClientConfig, ClientInstance, Options, Unwrappable, RequestResult } from './.kubb/client.ts'
-import type { D1CreateDatabaseOptions, D1CreateDatabaseResponses, TagsGetOptions, TagsGetResponses, TagsSetOptions, TagsSetResponses, TagsListOptions, TagsListResponses } from './types.ts'
+import type { D1ListDatabasesOptions, D1ListDatabasesResponses, D1CreateDatabaseOptions, D1CreateDatabaseResponses, TagsGetOptions, TagsGetResponses, TagsSetOptions, TagsSetResponses, TagsListOptions, TagsListResponses } from './types.ts'
 import { createClient, withUnwrap } from './.kubb/client.ts'
 
 export class CloudflareClient {
@@ -12,6 +12,17 @@ export class CloudflareClient {
 
   constructor(config: ClientConfig = {}) {
     this.client = createClient(config)
+  }
+
+/**
+   * @description List D1 databases in your account.
+   * @summary List D1 Databases
+   * {@link /accounts/:account_id/d1/database}
+   */
+    public d1ListDatabases<ThrowOnError extends boolean = true>(options: Options<D1ListDatabasesOptions, ThrowOnError>): Unwrappable<RequestResult<D1ListDatabasesResponses, ThrowOnError>> {
+    const { client: request = this.client, ...config } = options
+
+    return withUnwrap(request({ method: 'GET', url: '/accounts/{account_id}/d1/database', security: [{ type: 'http', scheme: 'bearer' }, { type: 'apiKey', name: 'X-Auth-Email', in: 'header' }, { type: 'apiKey', name: 'X-Auth-Key', in: 'header' }], ...config, throwOnError: config.throwOnError ?? true }) as Promise<RequestResult<D1ListDatabasesResponses, ThrowOnError>>)
   }
 
 /**

@@ -7,7 +7,29 @@ export class D1 extends Resource {
   static ciOnly = true;
 
   static async list() {
-    return (await listTagged("d1_database")).map((found) => ({ ...found, outputs: {} }));
+    const { client, path } = cloudflare();
+    const [tagged, databases] = await Promise.all([
+      listTagged("d1_database"),
+      (async () => {
+        const all: { uuid?: string; name?: string }[] = [];
+        const perPage = 10_000; // Cloudflare's maximum
+        for (let page = 1; ; page++) {
+          const { data } = await client.d1ListDatabases({
+            path,
+            query: { page, per_page: perPage },
+          });
+          all.push(...(data.result ?? []));
+          if ((data.result?.length ?? 0) < perPage) return all;
+        }
+      })(),
+    ]);
+    // D1's own list decides what exists, the tags who owns it: tags outlive their resource, so a
+    // database deleted in the dashboard keeps showing up in the tag search. Database names are unique
+    // per account, so untagged ones are returned too: deploy refuses to create over them.
+    const owners = new Map(tagged.map(({ id, owner }) => [id, owner]));
+    return databases.flatMap(({ uuid, name }) =>
+      uuid ? [{ id: uuid, name: name ?? "", owner: owners.get(uuid), outputs: {} }] : [],
+    );
   }
 
   constructor(name: string) {

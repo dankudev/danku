@@ -20,6 +20,11 @@ function ok(result: unknown, cursor?: string) {
   return { success: true, errors: [], messages: [], result, result_info: { cursor } };
 }
 
+/** D1's own list of the databases that exist, which danku checks the tag search against. */
+function existing(...ids: string[]) {
+  return ok(ids.map((uuid) => ({ uuid })));
+}
+
 /** A danku-owned D1 database as Cloudflare's tag search returns it. */
 function tagged(id: string, tags: Record<string, string>) {
   return { id, type: "d1_database", name: "", tags };
@@ -34,7 +39,7 @@ function mockCloudflare(routes: Record<string, unknown>) {
   vi.stubEnv("CLOUDFLARE_ACCOUNT_ID", "account-id");
   const requests: { route: string; url: URL; authorization: string | null; body: unknown }[] = [];
   vi.spyOn(globalThis, "fetch").mockImplementation(async (input) => {
-    // openapi-fetch always passes a Request.
+    // Kubb's client always passes a Request.
     const request = input as Request;
     const url = new URL(request.url);
     const route = `${request.method} ${url.pathname.replace("/client/v4/accounts/account-id", "")}`;
@@ -52,10 +57,16 @@ function mockCloudflare(routes: Record<string, unknown>) {
   return requests;
 }
 
+/** The writes danku made, in order; reads run in parallel, so their order isn't fixed. */
+const writes = (requests: { route: string }[]) =>
+  requests.map(({ route }) => route).filter((route) => !route.startsWith("GET "));
+
 test("a first deploy in CI creates and tags the database", async () => {
   await project({ ...workspace, ...named("@acme/acme"), ...deployTs('new D1("db");') });
   const requests = mockCloudflare({
     "GET /tags/resources": ok([]),
+    // Someone else's database in the same account: never shown or touched.
+    "GET /d1/database": ok([{ uuid: "notes-id", name: "notes" }]),
     "POST /d1/database": ok({ uuid: databaseId }),
     "PUT /tags": ok({}),
   });
@@ -67,17 +78,17 @@ test("a first deploy in CI creates and tags the database", async () => {
     stderr: "",
   });
 
-  expect(requests.map(({ route }) => route)).toEqual([
-    "GET /tags/resources",
-    "POST /d1/database",
-    "PUT /tags",
-  ]);
+  expect(writes(requests)).toEqual(["POST /d1/database", "PUT /tags"]);
   expect(requests.every(({ authorization }) => authorization === "Bearer token")).toBe(true);
+  const request = (route: string) => requests.find((it) => it.route === route)!;
   // Filtered by type and by both danku tags on Cloudflare's side.
-  expect(requests[0].url.searchParams.getAll("type")).toEqual(["d1_database"]);
-  expect(requests[0].url.searchParams.getAll("tag")).toEqual(["danku.project", "danku.name"]);
-  expect(requests[1].body).toEqual({ name: "acme-db" });
-  expect(requests[2].body).toEqual({
+  const search = request("GET /tags/resources").url.searchParams;
+  expect(search.getAll("type")).toEqual(["d1_database"]);
+  expect(search.getAll("tag")).toEqual(["danku.project", "danku.name"]);
+  // D1's list in Cloudflare's largest pages.
+  expect(request("GET /d1/database").url.searchParams.toString()).toBe("page=1&per_page=10000");
+  expect(request("POST /d1/database").body).toEqual({ name: "acme-db" });
+  expect(request("PUT /tags").body).toEqual({
     resource_type: "d1_database",
     resource_id: databaseId,
     tags: { "danku.project": "acme", "danku.name": "db", "danku.hash": expect.any(String) },
@@ -102,6 +113,7 @@ test("a redeploy updates changed databases and reports removed ones, ignoring ot
             ],
             "page-2",
           ),
+    "GET /d1/database": existing(databaseId, "old-id", "other-id"),
     // A tag someone added in the dashboard.
     "GET /tags": ok({
       tags: { "danku.project": "acme", "danku.name": "db", "danku.hash": "changed", team: "data" },
@@ -117,15 +129,14 @@ test("a redeploy updates changed databases and reports removed ones, ignoring ot
     stderr: "",
   });
 
-  expect(requests.map(({ route }) => route)).toEqual([
-    "GET /tags/resources",
-    "GET /tags/resources",
-    "GET /tags",
-    "PUT /tags",
-  ]);
-  expect(requests[1].url.searchParams.get("cursor")).toBe("page-2");
-  expect(requests[2].url.searchParams.get("resource_id")).toBe(databaseId);
-  const { tags } = requests[3].body as { tags: Record<string, string> };
+  expect(writes(requests)).toEqual(["PUT /tags"]);
+  const searches = requests.filter(({ route }) => route === "GET /tags/resources");
+  expect(searches.map(({ url }) => url.searchParams.get("cursor"))).toEqual([null, "page-2"]);
+  const read = requests.find(({ route }) => route === "GET /tags")!;
+  expect(read.url.searchParams.get("resource_id")).toBe(databaseId);
+  const { tags } = requests.find(({ route }) => route === "PUT /tags")!.body as {
+    tags: Record<string, string>;
+  };
   expect(tags).toEqual({
     team: "data",
     "danku.project": "acme",
@@ -138,21 +149,49 @@ test("an unchanged redeploy writes nothing", async () => {
   await project(acme('new D1("db");'));
   const first = mockCloudflare({
     "GET /tags/resources": ok([]),
+    "GET /d1/database": existing(),
     "POST /d1/database": ok({ uuid: databaseId }),
     "PUT /tags": ok({}),
   });
   await danku(["deploy"]);
-  const { tags } = first[2].body as { tags: Record<string, string> };
+  const { tags } = first.find(({ route }) => route === "PUT /tags")!.body as {
+    tags: Record<string, string>;
+  };
 
   await project(acme('new D1("db");'));
-  const second = mockCloudflare({ "GET /tags/resources": ok([tagged(databaseId, tags)]) });
+  const second = mockCloudflare({
+    "GET /tags/resources": ok([tagged(databaseId, tags)]),
+    "GET /d1/database": existing(databaseId),
+  });
 
   expect(await danku(["deploy"])).toEqual({
     exitCode: 0,
     stdout: "= D1 db: no changes",
     stderr: "",
   });
-  expect(second).toHaveLength(1);
+  expect(writes(second)).toEqual([]);
+});
+
+test("a database deleted in the dashboard is created again, though its tags linger", async () => {
+  await project(acme('new D1("db");'));
+  const requests = mockCloudflare({
+    // Cloudflare keeps a deleted resource's tags: the search still lists both, D1 lists neither.
+    "GET /tags/resources": ok([
+      tagged("deleted-id", { "danku.project": "acme", "danku.name": "db", "danku.hash": "same" }),
+      tagged("deleted-old-id", { "danku.project": "acme", "danku.name": "old" }),
+    ]),
+    "GET /d1/database": existing(),
+    "POST /d1/database": ok({ uuid: databaseId }),
+    "PUT /tags": ok({}),
+  });
+
+  // Nothing is reported for the deleted "old" either: it no longer exists.
+  expect(await danku(["deploy"])).toEqual({
+    exitCode: 0,
+    stdout: "+ D1 db: create acme-db",
+    stderr: "",
+  });
+  expect(writes(requests)).toEqual(["POST /d1/database", "PUT /tags"]);
 });
 
 test("in dev, from inside an app, it skips CI-only kinds without a token or network", async () => {
@@ -236,6 +275,7 @@ test("Cloudflare's problems are reported in one line", async () => {
     {
       routes: {
         "GET /tags/resources": ok([]),
+        "GET /d1/database": existing(),
         "POST /d1/database": Response.json(
           {
             success: false,
@@ -250,6 +290,7 @@ test("Cloudflare's problems are reported in one line", async () => {
     {
       routes: {
         "GET /tags/resources": ok([]),
+        "GET /d1/database": existing(),
         "POST /d1/database": new Response("<html>Bad gateway</html>", {
           status: 502,
           statusText: "Bad Gateway",
@@ -263,8 +304,30 @@ test("Cloudflare's problems are reported in one line", async () => {
           tagged("id-1", { "danku.project": "acme", "danku.name": "db" }),
           tagged("id-2", { "danku.project": "acme", "danku.name": "db" }),
         ]),
+        "GET /d1/database": existing("id-1", "id-2"),
       },
       message: 'D1 "db" exists 2 times in the cloud; delete the extra copies',
+    },
+    {
+      routes: {
+        // The name danku would create is taken by a database another danku project owns.
+        "GET /tags/resources": ok([
+          tagged("other-id", { "danku.project": "other", "danku.name": "x" }),
+        ]),
+        "GET /d1/database": ok([{ uuid: "other-id", name: "acme-db" }]),
+      },
+      message: 'D1 "db": acme-db already exists, and belongs to the danku project "other"',
+    },
+    {
+      routes: {
+        // acme-db exists, but without danku's tags: danku didn't create it, so it isn't touched.
+        "GET /tags/resources": ok([]),
+        "GET /d1/database": ok([
+          { uuid: "notes-id", name: "notes" },
+          { uuid: databaseId, name: "acme-db" },
+        ]),
+      },
+      message: `D1 "db": acme-db already exists, but danku didn't create it (it has no danku tags); remove it or rename the resource in danku/deploy.ts`,
     },
   ];
 

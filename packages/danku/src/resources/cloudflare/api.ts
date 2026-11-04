@@ -91,7 +91,6 @@ export async function tag(
 
 /**
  * Like tag(), but keeps the tags users added themselves: Cloudflare's PUT replaces the whole set.
- * Only for resources found by listTagged(), since Cloudflare answers 500 for never-tagged ones.
  */
 export async function retag(type: ResourceType, id: string, owner: Owner): Promise<void> {
   const { client, path } = cloudflare();
