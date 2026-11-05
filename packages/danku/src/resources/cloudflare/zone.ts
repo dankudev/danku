@@ -1,11 +1,16 @@
 import { CliError } from "../../error.ts";
 import { type Owner, Resource } from "../resource.ts";
-import { cloudflare, listTagged, retag } from "./api.ts";
+import { listTagged, listZones, retag } from "./api.ts";
 
-/** One DNS label: lowercase letters, digits and inner dashes, at most 63 characters. */
+/** One hostname label: lowercase letters, digits and inner dashes, at most 63 characters. */
 const label = /^[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?$/;
+/** One DNS name label: as above, plus underscores, which records such as `_dmarc` use. */
+const recordLabel = /^[a-z0-9_]([a-z0-9_-]{0,61}[a-z0-9_])?$/;
 
-/** A hostname inside a zone, e.g. `zone.sub("www")`; what a Worker's `domain` takes. */
+/**
+ * A name inside a zone, e.g. `zone.sub("www")`; what a Worker's or DNS record's `domain` takes.
+ * Workers need a hostname (no underscores); DNS records may also use names like `_dmarc`.
+ */
 export interface Subdomain {
   zone: Zone;
   hostname: string;
@@ -29,21 +34,7 @@ export class Zone extends Resource<Record<string, never>, { status?: string }> {
   }
 
   static async list() {
-    const { client, path } = cloudflare();
-    const [tagged, zones] = await Promise.all([
-      listTagged(),
-      (async () => {
-        const all: { id: string; name: string; status?: string }[] = [];
-        const perPage = 50; // Cloudflare's maximum
-        for (let page = 1; ; page++) {
-          const { data } = await client.zonesGet({
-            query: { "account.id": path.account_id, page, per_page: perPage },
-          });
-          all.push(...(data.result ?? []));
-          if ((data.result?.length ?? 0) < perPage) return all;
-        }
-      })(),
-    ]);
+    const [tagged, zones] = await Promise.all([listTagged(), listZones()]);
     // As for D1: the zone list decides what exists, the tags who owns it. A zone's name is unique
     // in an account, so untagged ones are returned too: deploy adopts the declared one.
     const owners = new Map(
@@ -66,9 +57,9 @@ export class Zone extends Resource<Record<string, never>, { status?: string }> {
     return this.name;
   }
 
-  /** A hostname in this zone: `zone.sub("www")` is www.example.com. */
+  /** A name in this zone: `zone.sub("www")` is www.example.com. */
   sub(name: string): Subdomain {
-    if (!name.split(".").every((it) => label.test(it))) {
+    if (!name.split(".").every((it) => recordLabel.test(it))) {
       throw new CliError(`Zone "${this.name}": "${name}" isn't a valid subdomain`);
     }
     return { zone: this, hostname: `${name}.${this.name}` };

@@ -14,7 +14,7 @@ import { type Subdomain, Zone } from "./zone.ts";
  * moves; keep it no later than the workerd in the newest wrangler, or local dev falls back to an
  * older date.
  */
-export const compatibilityDate = "2026-12-13";
+export const compatibilityDate = "2026-10-13";
 
 /** Where adapter-cloudflare writes the build, relative to the app. */
 const output = ".svelte-kit/cloudflare";
@@ -60,8 +60,18 @@ export function wranglerConfig(worker: Worker, project: string) {
   };
 }
 
-/** A Cloudflare Worker running one app, uploaded with wrangler from the app's build output. */
-export class Worker extends Resource<WorkerInputs> {
+interface WorkerOutputs {
+  /** The script name, which Cloudflare deletes it by. */
+  name: string;
+  /** Its custom domains: the `domain` it was deployed with. */
+  domains: { id: string; hostname: string }[];
+}
+
+/**
+ * A Cloudflare Worker running one app, uploaded with wrangler from the app's build output. Not data:
+ * one removed from deploy.ts is deleted, with its custom domain.
+ */
+export class Worker extends Resource<WorkerInputs, WorkerOutputs> {
   // Local dev runs the app with Vite and wrangler's local runtime.
   static ciOnly = true;
   /** The account's workers.dev subdomain, read by list(); unset when the account has none. */
@@ -69,9 +79,10 @@ export class Worker extends Resource<WorkerInputs> {
 
   static async list() {
     const { client, path } = cloudflare();
-    const [tagged, scripts, subdomain] = await Promise.all([
+    const [tagged, scripts, domains, subdomain] = await Promise.all([
       listTagged(),
       client.workerScriptListWorkers({ path }).then(({ data }) => data.result ?? []),
+      client.workersDomainsList({ path }).then(({ data }) => data.result ?? []),
       // Only for printing URLs, so an account without one (or a failed read) isn't an error.
       client.workerSubdomainGetSubdomain({ path }).then(
         ({ data }) => data.result.subdomain,
@@ -85,8 +96,55 @@ export class Worker extends Resource<WorkerInputs> {
       tagged.filter(({ type }) => type === "worker").map(({ id, owner }) => [id, owner]),
     );
     return scripts.flatMap(({ id: name, tag: id }) =>
-      name && id ? [{ id, name, owner: owners.get(id), outputs: {} }] : [],
+      name && id
+        ? [
+            {
+              id,
+              name,
+              owner: owners.get(id),
+              outputs: {
+                name,
+                domains: domains
+                  .filter(({ service }) => service === name)
+                  .map(({ id, hostname }) => ({ id, hostname })),
+              },
+            },
+          ]
+        : [],
     );
+  }
+
+  /**
+   * An orphan Worker on a hostname a declared Worker is now deployed to (a renamed Worker keeping its
+   * domain): it has to let go of it before the new one can take it over.
+   */
+  static holds({ outputs }: { outputs: unknown }, declared: Resource[]): string | undefined {
+    const { domains } = outputs as WorkerOutputs;
+    return domains.find(({ hostname }) =>
+      declared.some((it) => it instanceof Worker && it.hostname() === hostname),
+    )?.hostname;
+  }
+
+  static async delete({ outputs }: { outputs: unknown }): Promise<void> {
+    const { client, path } = cloudflare();
+    const { name, domains } = outputs as WorkerOutputs;
+    // Detaching a custom domain removes the DNS record and certificate Cloudflare made for it;
+    // done explicitly rather than trusting the script's deletion to do it.
+    for (const { id } of domains) {
+      await client.workersDomainsDelete({ path: { ...path, domain_id: id } });
+    }
+    await client.workerScriptDeleteWorker({ path: { ...path, script_name: name } });
+  }
+
+  constructor(name: string, inputs: WorkerInputs) {
+    super(name, inputs);
+    // zone.sub() also accepts DNS-only names like `_dmarc`, which can't serve a website.
+    const hostname = this.hostname();
+    if (hostname?.includes("_")) {
+      throw new CliError(
+        `Worker "${name}": ${hostname} can't serve a Worker; hostnames use letters, digits and dashes`,
+      );
+    }
   }
 
   /** The hostname of its `domain`, if it has one. */
@@ -147,7 +205,6 @@ export class Worker extends Resource<WorkerInputs> {
     const id = data.result?.find((script) => script.id === name)?.tag;
     if (!id) throw new Error(`Cloudflare doesn't list the Worker ${name} just deployed`);
     this.id = id;
-    this.outputs = {};
     await tag({ type: "worker", id }, owner);
   }
 

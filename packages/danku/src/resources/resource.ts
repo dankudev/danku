@@ -22,9 +22,9 @@ export interface Kind {
   /** Applied only when CI=true; in dev, local tools (wrangler/miniflare) provide it. */
   ciOnly: boolean;
   /**
-   * For kinds whose names you own by registering them (DNS zones): they exist before danku runs, so
-   * an untagged one with the declared name is adopted (tagged) instead of refused. Other kinds only
-   * ever touch what danku created.
+   * For kinds that exist before danku runs: zones (you register the domain) and DNS records added by
+   * hand. An untagged one with the declared cloud name (for a record: type, name and content) is
+   * adopted (tagged) instead of refused. Other kinds only ever touch what danku created.
    */
   adopt?: boolean;
   /**
@@ -33,8 +33,16 @@ export interface Kind {
    * owner, so `danku deploy` can refuse to create a name that's already taken before any change.
    */
   list(): Promise<{ id: string; name: string; owner?: Owner; outputs: unknown }[]>;
-  /** Missing for data kinds (D1, KV, R2…): their orphans are only reported, never deleted. */
-  delete?(id: string): Promise<void>;
+  /**
+   * Deletes an orphan, as list() returned it. Missing for data kinds (D1, KV, R2…): their orphans
+   * are only reported, never deleted.
+   */
+  delete?(found: { id: string; outputs: unknown }): Promise<void>;
+  /**
+   * What an orphan holds that a declared resource now needs (a Worker's hostname), if anything:
+   * such an orphan is deleted before any change instead of last.
+   */
+  holds?(found: { id: string; outputs: unknown }, declared: Resource[]): string | undefined;
 }
 
 /** Filled by constructors while danku/deploy.ts is imported; main() empties it before each run. */

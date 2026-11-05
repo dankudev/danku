@@ -4,7 +4,7 @@
 */
 
 import type { ClientConfig, ClientInstance, Options, Unwrappable, RequestResult } from './.kubb/client.ts'
-import type { D1ListDatabasesOptions, D1ListDatabasesResponses, D1CreateDatabaseOptions, D1CreateDatabaseResponses, TagsGetOptions, TagsGetResponses, TagsSetOptions, TagsSetResponses, TagsListOptions, TagsListResponses, WorkerScriptListWorkersOptions, WorkerScriptListWorkersResponses, WorkerSubdomainGetSubdomainOptions, WorkerSubdomainGetSubdomainResponses, ZonesGetOptions, ZonesGetResponses, TagsZoneGetOptions, TagsZoneGetResponses, TagsZoneSetOptions, TagsZoneSetResponses } from './types.ts'
+import type { D1ListDatabasesOptions, D1ListDatabasesResponses, D1CreateDatabaseOptions, D1CreateDatabaseResponses, TagsGetOptions, TagsGetResponses, TagsSetOptions, TagsSetResponses, TagsListOptions, TagsListResponses, WorkersDomainsListOptions, WorkersDomainsListResponses, WorkersDomainsDeleteOptions, WorkersDomainsDeleteResponses, WorkerScriptListWorkersOptions, WorkerScriptListWorkersResponses, WorkerScriptDeleteWorkerOptions, WorkerScriptDeleteWorkerResponses, WorkerSubdomainGetSubdomainOptions, WorkerSubdomainGetSubdomainResponses, ZonesGetOptions, ZonesGetResponses, DnsRecordsForAZoneListDnsRecordsOptions, DnsRecordsForAZoneListDnsRecordsResponses, DnsRecordsForAZoneCreateDnsRecordOptions, DnsRecordsForAZoneCreateDnsRecordResponses, DnsRecordsForAZoneDeleteDnsRecordOptions, DnsRecordsForAZoneDeleteDnsRecordResponses, DnsRecordsForAZoneUpdateDnsRecordOptions, DnsRecordsForAZoneUpdateDnsRecordResponses, TagsZoneGetOptions, TagsZoneGetResponses, TagsZoneSetOptions, TagsZoneSetResponses } from './types.ts'
 import { createClient, withUnwrap } from './.kubb/client.ts'
 
 export class CloudflareClient {
@@ -70,6 +70,28 @@ export class CloudflareClient {
   }
 
 /**
+   * @description Lists all Worker domains for an account.
+   * @summary List Worker Domains
+   * {@link /accounts/:account_id/workers/domains}
+   */
+    public workersDomainsList<ThrowOnError extends boolean = true>(options: Options<WorkersDomainsListOptions, ThrowOnError>): Unwrappable<RequestResult<WorkersDomainsListResponses, ThrowOnError>> {
+    const { client: request = this.client, ...config } = options
+
+    return withUnwrap(request({ method: 'GET', url: '/accounts/{account_id}/workers/domains', security: [{ type: 'http', scheme: 'bearer' }, { type: 'apiKey', name: 'X-Auth-Email', in: 'header' }, { type: 'apiKey', name: 'X-Auth-Key', in: 'header' }], ...config, throwOnError: config.throwOnError ?? true }) as Promise<RequestResult<WorkersDomainsListResponses, ThrowOnError>>)
+  }
+
+/**
+   * @description Detaches a domain from a Worker. Both the Worker and all of its previews are no longer routable using this domain.
+   * @summary Detach Worker Domain
+   * {@link /accounts/:account_id/workers/domains/:domain_id}
+   */
+    public workersDomainsDelete<ThrowOnError extends boolean = true>(options: Options<WorkersDomainsDeleteOptions, ThrowOnError>): Unwrappable<RequestResult<WorkersDomainsDeleteResponses, ThrowOnError>> {
+    const { client: request = this.client, ...config } = options
+
+    return withUnwrap(request({ method: 'DELETE', url: '/accounts/{account_id}/workers/domains/{domain_id}', security: [{ type: 'http', scheme: 'bearer' }, { type: 'apiKey', name: 'X-Auth-Email', in: 'header' }, { type: 'apiKey', name: 'X-Auth-Key', in: 'header' }], ...config, throwOnError: config.throwOnError ?? true }) as Promise<RequestResult<WorkersDomainsDeleteResponses, ThrowOnError>>)
+  }
+
+/**
    * @description Fetch a list of uploaded Worker scripts.
    * @summary List Worker Scripts
    * {@link /accounts/:account_id/workers/scripts}
@@ -78,6 +100,17 @@ export class CloudflareClient {
     const { client: request = this.client, ...config } = options
 
     return withUnwrap(request({ method: 'GET', url: '/accounts/{account_id}/workers/scripts', security: [{ type: 'http', scheme: 'bearer' }, { type: 'apiKey', name: 'X-Auth-Email', in: 'header' }, { type: 'apiKey', name: 'X-Auth-Key', in: 'header' }], ...config, throwOnError: config.throwOnError ?? true }) as Promise<RequestResult<WorkerScriptListWorkersResponses, ThrowOnError>>)
+  }
+
+/**
+   * @description Delete your worker. This call has no response body on a successful delete.
+   * @summary Delete Worker
+   * {@link /accounts/:account_id/workers/scripts/:script_name}
+   */
+    public workerScriptDeleteWorker<ThrowOnError extends boolean = true>(options: Options<WorkerScriptDeleteWorkerOptions, ThrowOnError>): Unwrappable<RequestResult<WorkerScriptDeleteWorkerResponses, ThrowOnError>> {
+    const { client: request = this.client, ...config } = options
+
+    return withUnwrap(request({ method: 'DELETE', url: '/accounts/{account_id}/workers/scripts/{script_name}', security: [{ type: 'http', scheme: 'bearer' }, { type: 'apiKey', name: 'X-Auth-Email', in: 'header' }, { type: 'apiKey', name: 'X-Auth-Key', in: 'header' }], ...config, throwOnError: config.throwOnError ?? true }) as Promise<RequestResult<WorkerScriptDeleteWorkerResponses, ThrowOnError>>)
   }
 
 /**
@@ -101,6 +134,60 @@ export class CloudflareClient {
     const { client: request = this.client, ...config } = options
 
     return withUnwrap(request({ method: 'GET', url: '/zones', security: [{ type: 'http', scheme: 'bearer' }, { type: 'apiKey', name: 'X-Auth-Email', in: 'header' }, { type: 'apiKey', name: 'X-Auth-Key', in: 'header' }], styles: { query: { type: { style: 'form', explode: false } } }, ...config, throwOnError: config.throwOnError ?? true }) as Promise<RequestResult<ZonesGetResponses, ThrowOnError>>)
+  }
+
+/**
+   * @description List, search, sort, and filter a zones' DNS records.
+   * @summary List DNS Records
+   * {@link /zones/:zone_id/dns_records}
+   */
+    public dnsRecordsForAZoneListDnsRecords<ThrowOnError extends boolean = true>(options: Options<DnsRecordsForAZoneListDnsRecordsOptions, ThrowOnError>): Unwrappable<RequestResult<DnsRecordsForAZoneListDnsRecordsResponses, ThrowOnError>> {
+    const { client: request = this.client, ...config } = options
+
+    return withUnwrap(request({ method: 'GET', url: '/zones/{zone_id}/dns_records', security: [{ type: 'http', scheme: 'bearer' }, { type: 'apiKey', name: 'X-Auth-Email', in: 'header' }, { type: 'apiKey', name: 'X-Auth-Key', in: 'header' }], ...config, throwOnError: config.throwOnError ?? true }) as Promise<RequestResult<DnsRecordsForAZoneListDnsRecordsResponses, ThrowOnError>>)
+  }
+
+/**
+   * @description Create a new DNS record for a zone.
+   * Notes:
+   * - A/AAAA records cannot exist on the same name as CNAME records.
+   * - NS records cannot exist on the same name as any other record type.
+   * - Domain names are always represented in Punycode, even if Unicode
+   * characters were used when creating the record.
+   * @summary Create DNS Record
+   * {@link /zones/:zone_id/dns_records}
+   */
+    public dnsRecordsForAZoneCreateDnsRecord<ThrowOnError extends boolean = true>(options: Options<DnsRecordsForAZoneCreateDnsRecordOptions, ThrowOnError>): Unwrappable<RequestResult<DnsRecordsForAZoneCreateDnsRecordResponses, ThrowOnError>> {
+    const { client: request = this.client, ...config } = options
+
+    return withUnwrap(request({ method: 'POST', url: '/zones/{zone_id}/dns_records', security: [{ type: 'http', scheme: 'bearer' }, { type: 'apiKey', name: 'X-Auth-Email', in: 'header' }, { type: 'apiKey', name: 'X-Auth-Key', in: 'header' }], contentType: { request: 'application/json' }, ...config, throwOnError: config.throwOnError ?? true }) as Promise<RequestResult<DnsRecordsForAZoneCreateDnsRecordResponses, ThrowOnError>>)
+  }
+
+/**
+   * @description Permanently removes a DNS record from the zone.
+   * @summary Delete DNS Record
+   * {@link /zones/:zone_id/dns_records/:dns_record_id}
+   */
+    public dnsRecordsForAZoneDeleteDnsRecord<ThrowOnError extends boolean = true>(options: Options<DnsRecordsForAZoneDeleteDnsRecordOptions, ThrowOnError>): Unwrappable<RequestResult<DnsRecordsForAZoneDeleteDnsRecordResponses, ThrowOnError>> {
+    const { client: request = this.client, ...config } = options
+
+    return withUnwrap(request({ method: 'DELETE', url: '/zones/{zone_id}/dns_records/{dns_record_id}', security: [{ type: 'http', scheme: 'bearer' }, { type: 'apiKey', name: 'X-Auth-Email', in: 'header' }, { type: 'apiKey', name: 'X-Auth-Key', in: 'header' }], ...config, throwOnError: config.throwOnError ?? true }) as Promise<RequestResult<DnsRecordsForAZoneDeleteDnsRecordResponses, ThrowOnError>>)
+  }
+
+/**
+   * @description Overwrite an existing DNS record.
+   * Notes:
+   * - A/AAAA records cannot exist on the same name as CNAME records.
+   * - NS records cannot exist on the same name as any other record type.
+   * - Domain names are always represented in Punycode, even if Unicode
+   * characters were used when creating the record.
+   * @summary Overwrite DNS Record
+   * {@link /zones/:zone_id/dns_records/:dns_record_id}
+   */
+    public dnsRecordsForAZoneUpdateDnsRecord<ThrowOnError extends boolean = true>(options: Options<DnsRecordsForAZoneUpdateDnsRecordOptions, ThrowOnError>): Unwrappable<RequestResult<DnsRecordsForAZoneUpdateDnsRecordResponses, ThrowOnError>> {
+    const { client: request = this.client, ...config } = options
+
+    return withUnwrap(request({ method: 'PUT', url: '/zones/{zone_id}/dns_records/{dns_record_id}', security: [{ type: 'http', scheme: 'bearer' }, { type: 'apiKey', name: 'X-Auth-Email', in: 'header' }, { type: 'apiKey', name: 'X-Auth-Key', in: 'header' }], contentType: { request: 'application/json' }, ...config, throwOnError: config.throwOnError ?? true }) as Promise<RequestResult<DnsRecordsForAZoneUpdateDnsRecordResponses, ThrowOnError>>)
   }
 
 /**

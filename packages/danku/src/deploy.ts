@@ -3,13 +3,24 @@ import { createHash } from "node:crypto";
 import { CliError } from "./error.ts";
 import { loadProject } from "./project.ts";
 import { D1 } from "./resources/cloudflare/d1.ts";
+import { DnsRecord } from "./resources/cloudflare/dns-record.ts";
 import { Worker } from "./resources/cloudflare/worker.ts";
 import { Zone } from "./resources/cloudflare/zone.ts";
 import { type Kind, Resource, resources } from "./resources/resource.ts";
 import type { Run } from "./run.ts";
 
-/** Every kind danku deploys. All of them are listed on each run, so removed resources are found. */
-const kinds: (Kind & (abstract new (...args: never[]) => Resource))[] = [Zone, D1, Worker];
+/**
+ * Every kind danku deploys. All of them are listed on each run, so removed resources are found.
+ */
+const kinds: (Kind & (abstract new (...args: never[]) => Resource))[] = [
+  Zone,
+  D1,
+  DnsRecord,
+  Worker,
+];
+
+/** Cloud names as the plan prints them: long ones (a DKIM key) are cut short. */
+const short = (name: string) => (name.length > 80 ? `${name.slice(0, 79)}…` : name);
 
 /**
  * `danku deploy`: makes the cloud match danku/deploy.ts. Everything is read and planned before the
@@ -64,11 +75,17 @@ export async function deploy(run: Run): Promise<void> {
     const [match] = matches;
     // danku only touches what it created: a resource that already has the name it would create
     // stops the deploy before any change. Only kinds with unique names list untagged ones, and
-    // only kinds whose names you own by registering them (zones) adopt the untagged one instead.
+    // only kinds that exist before danku runs (zones, hand-made DNS records) adopt the untagged one
+    // instead. One this project owns under a label no longer declared was renamed in deploy.ts
+    // (possible where the label isn't part of the cloud name): it's taken over, not refused.
     const taken = match
       ? undefined
       : found.find(({ kind, name: it }) => resource instanceof kind && it === name);
-    const adopt = taken && !taken.owner && (resource.constructor as unknown as Kind).adopt;
+    const renamed =
+      taken?.owner?.project === project &&
+      !declared.some((it) => it instanceof taken.kind && it.name === taken.owner!.name);
+    const adopt =
+      taken && (renamed || (!taken.owner && (resource.constructor as unknown as Kind).adopt));
     if (taken && !adopt) {
       throw new CliError(
         `${label}: ${name} already exists, ` +
@@ -99,8 +116,19 @@ export async function deploy(run: Run): Promise<void> {
   // Every resource now knows what exists, so checks across resources (a Worker's zone) can run.
   for (const { resource } of steps) resource.check?.();
   const orphans = owned.filter(
-    ({ kind, owner }) =>
-      !declared.some((resource) => resource instanceof kind && resource.name === owner.name),
+    ({ kind, id, owner }) =>
+      !declared.some(
+        (resource) =>
+          resource instanceof kind && (resource.name === owner.name || resource.id === id),
+      ),
+  );
+  // Orphans go last, once everything that might replace them exists, except ones holding what a
+  // declared resource needs (a renamed Worker's domain): those go first, or it couldn't be taken.
+  const held = new Map(
+    orphans.flatMap((orphan) => {
+      const what = orphan.kind.delete && orphan.kind.holds?.(orphan, declared);
+      return what ? [[orphan, what] as const] : [];
+    }),
   );
 
   for (const resource of resources) {
@@ -112,13 +140,16 @@ export async function deploy(run: Run): Promise<void> {
     else if (step.change === "none") console.log(`= ${label}: no changes${at}`);
     else {
       console.log(
-        `${step.change === "create" ? "+" : "~"} ${label}: ${step.change} ${step.name}${at}`,
+        `${step.change === "create" ? "+" : "~"} ${label}: ${step.change} ${short(step.name)}${at}`,
       );
     }
   }
-  for (const { kind, owner, name } of orphans) {
+  for (const orphan of orphans) {
+    const { kind, owner, name } = orphan;
     const label = `${kind.name} ${owner.name}`;
-    if (kind.delete) console.log(`- ${label}: delete ${name}`);
+    const what = held.get(orphan);
+    if (what) console.log(`- ${label}: delete ${short(name)} first, to free ${what}`);
+    else if (kind.delete) console.log(`- ${label}: delete ${short(name)}`);
     else {
       console.log(
         `! ${label}: ${name} is no longer in danku/deploy.ts; danku never deletes data, so delete it yourself once you no longer need it`,
@@ -126,11 +157,11 @@ export async function deploy(run: Run): Promise<void> {
     }
   }
 
+  for (const orphan of held.keys()) await orphan.kind.delete!(orphan);
   for (const { resource, owner, change } of steps) {
     if (change === "create") await resource.create!(owner, root, run);
     // Adopting writes danku's tags, which is what an update of an unchanged resource does.
     if (change === "update" || change === "adopt") await resource.update(owner, root, run);
   }
-  // Orphans go last, once everything that might replace them exists.
-  for (const { kind, id } of orphans) await kind.delete?.(id);
+  for (const orphan of orphans) if (!held.has(orphan)) await orphan.kind.delete?.(orphan);
 }

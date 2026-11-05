@@ -271,6 +271,1236 @@ export const d1PrimaryLocationHint = {
 export type D1PrimaryLocationHintKey = (typeof d1PrimaryLocationHint)[keyof typeof d1PrimaryLocationHint];
 
 /**
+ * @description Comments or notes about the DNS record. This field has no effect on DNS responses.
+ * @example Domain verification record
+ * @type string
+ */
+export type DnsRecordsComment = string;
+
+/**
+ * @description Complete DNS record name, including the zone name, in Punycode.
+ * @minLength 1
+ * @maxLength 255
+ * @example example.com
+ * @type string
+ */
+export type DnsRecordsName = string;
+
+/**
+ * @description Whether the record is receiving the performance and security benefits of Cloudflare.
+ * @default false
+ * @example true
+ * @type boolean
+ */
+export type DnsRecordsProxied = boolean;
+
+/**
+ * @description Settings for the DNS record.
+ * @type object
+ */
+export type DnsRecordsSettings = {
+  /**
+   * @description When enabled, only A records will be generated, and AAAA records will not be created. This setting is intended for exceptional cases. Note that this option only applies to proxied records and it has no effect on whether Cloudflare communicates with the origin using IPv4 or IPv6.
+   * @default false
+   * @example true
+   * @type boolean | undefined
+   */
+  ipv4_only?: boolean;
+  /**
+   * @description When enabled, only AAAA records will be generated, and A records will not be created. This setting is intended for exceptional cases. Note that this option only applies to proxied records and it has no effect on whether Cloudflare communicates with the origin using IPv4 or IPv6.
+   * @default false
+   * @example true
+   * @type boolean | undefined
+   */
+  ipv6_only?: boolean;
+};
+
+/**
+ * @description Custom tags for the DNS record. This field has no effect on DNS responses.
+ * @default []
+ * @type array
+ */
+export type DnsRecordsTags = string[];
+
+/**
+ * @description Time To Live (TTL) of the DNS record in seconds. Setting to 1 means 'automatic'. Value must be between 60 and 86400, with the minimum reduced to 30 for Enterprise zones.
+ * @default 1
+ * @example 3600
+ */
+export type DnsRecordsTtl = number | 1;
+
+export type DnsRecordsDnsRecordSharedFields = {
+  /**
+   * @description Comments or notes about the DNS record. This field has no effect on DNS responses.
+   * @example Domain verification record
+   * @type string | undefined
+   */
+  comment?: DnsRecordsComment;
+  /**
+   * @description Complete DNS record name, including the zone name, in Punycode.
+   * @minLength 1
+   * @maxLength 255
+   * @example example.com
+   * @type string | undefined
+   */
+  name?: DnsRecordsName;
+  /**
+   * @description Whether the record is receiving the performance and security benefits of Cloudflare.
+   * @default false
+   * @example true
+   * @type boolean | undefined
+   */
+  proxied?: DnsRecordsProxied;
+  /**
+   * @description Settings for the DNS record.
+   * @type object | undefined
+   */
+  settings?: DnsRecordsSettings;
+  /**
+   * @description Custom tags for the DNS record. This field has no effect on DNS responses.
+   * @default []
+   * @type array | undefined
+   */
+  tags?: DnsRecordsTags;
+  /**
+   * @description Time To Live (TTL) of the DNS record in seconds. Setting to 1 means 'automatic'. Value must be between 60 and 86400, with the minimum reduced to 30 for Enterprise zones.
+   * @default 1
+   * @example 3600
+   */
+  ttl?: DnsRecordsTtl;
+};
+
+export type DnsRecordsAAAARecord = DnsRecordsDnsRecordSharedFields & {
+  /**
+   * @description A valid IPv6 address.
+   *
+   * Format: `ipv6`
+   * @example 2400:cb00:2049::1
+   * @type string | undefined
+   */
+  content?: string;
+  /**
+   * @description Enables private network routing to the origin.
+   * @default false
+   * @example true
+   * @type boolean | undefined
+   */
+  private_routing?: boolean;
+  /**
+   * @description Record type.
+   * @example AAAA
+   * @type string | undefined
+   */
+  type?: 'AAAA';
+};
+
+export type DnsRecordsARecord = DnsRecordsDnsRecordSharedFields & {
+  /**
+   * @description A valid IPv4 address.
+   *
+   * Format: `ipv4`
+   * @example 198.51.100.4
+   * @type string | undefined
+   */
+  content?: string;
+  /**
+   * @description Enables private network routing to the origin.
+   * @default false
+   * @example true
+   * @type boolean | undefined
+   */
+  private_routing?: boolean;
+  /**
+   * @description Record type.
+   * @example A
+   * @type string | undefined
+   */
+  type?: 'A';
+};
+
+export type DnsRecordsCAARecord = DnsRecordsDnsRecordSharedFields & {
+  /**
+   * @description Formatted CAA content. See 'data' to set CAA properties.
+   * @type string | undefined
+   */
+  readonly content?: string;
+  /**
+   * @description Components of a CAA record.
+   * @type object | undefined
+   */
+  data?: {
+    /**
+     * @description Flags for the CAA record.
+     * @minimum 0
+     * @maximum 255
+     * @example 1
+     * @type number | undefined
+     */
+    flags?: number;
+    /**
+     * @description Name of the property controlled by this record (e.g.: issue, issuewild, iodef).
+     * @example issue
+     * @type string | undefined
+     */
+    tag?: string;
+    /**
+     * @description Value of the record. This field's semantics depend on the chosen tag.
+     * @type string | undefined
+     */
+    value?: string;
+  };
+  /**
+   * @description Record type.
+   * @example CAA
+   * @type string | undefined
+   */
+  type?: 'CAA';
+};
+
+export type DnsRecordsCERTRecord = DnsRecordsDnsRecordSharedFields & {
+  /**
+   * @description Formatted CERT content. See 'data' to set CERT properties.
+   * @type string | undefined
+   */
+  readonly content?: string;
+  /**
+   * @description Components of a CERT record.
+   * @type object | undefined
+   */
+  data?: {
+    /**
+     * @description Algorithm.
+     * @minimum 0
+     * @maximum 255
+     * @example 8
+     * @type number | undefined
+     */
+    algorithm?: number;
+    /**
+     * @description Certificate.
+     * @type string | undefined
+     */
+    certificate?: string;
+    /**
+     * @description Key Tag.
+     * @minimum 0
+     * @maximum 65535
+     * @example 1
+     * @type number | undefined
+     */
+    key_tag?: number;
+    /**
+     * @description Type.
+     * @minimum 0
+     * @maximum 65535
+     * @example 9
+     * @type number | undefined
+     */
+    type?: number;
+  };
+  /**
+   * @description Record type.
+   * @example CERT
+   * @type string | undefined
+   */
+  type?: 'CERT';
+};
+
+export type DnsRecordsCNAMERecord = DnsRecordsDnsRecordSharedFields & {
+  /**
+   * @description A valid hostname. Must not match the record's name.
+   * @type string | undefined
+   */
+  content?: string;
+  settings?: {
+    /**
+     * @description If enabled, causes the CNAME record to be resolved externally and the resulting address records (e.g., A and AAAA) to be returned instead of the CNAME record itself. This setting is unavailable for proxied records, since they are always flattened.
+     * @default false
+     * @example true
+     * @type boolean | undefined
+     */
+    flatten_cname?: boolean;
+  };
+  /**
+   * @description Record type.
+   * @example CNAME
+   * @type string | undefined
+   */
+  type?: 'CNAME';
+};
+
+export type DnsRecordsDNSKEYRecord = DnsRecordsDnsRecordSharedFields & {
+  /**
+   * @description Formatted DNSKEY content. See 'data' to set DNSKEY properties.
+   * @type string | undefined
+   */
+  readonly content?: string;
+  /**
+   * @description Components of a DNSKEY record.
+   * @type object | undefined
+   */
+  data?: {
+    /**
+     * @description Algorithm.
+     * @minimum 0
+     * @maximum 255
+     * @example 5
+     * @type number | undefined
+     */
+    algorithm?: number;
+    /**
+     * @description Flags.
+     * @minimum 0
+     * @maximum 65535
+     * @example 1
+     * @type number | undefined
+     */
+    flags?: number;
+    /**
+     * @description Protocol.
+     * @minimum 0
+     * @maximum 255
+     * @example 3
+     * @type number | undefined
+     */
+    protocol?: number;
+    /**
+     * @description Public Key.
+     * @type string | undefined
+     */
+    public_key?: string;
+  };
+  /**
+   * @description Record type.
+   * @example DNSKEY
+   * @type string | undefined
+   */
+  type?: 'DNSKEY';
+};
+
+export type DnsRecordsDSRecord = DnsRecordsDnsRecordSharedFields & {
+  /**
+   * @description Formatted DS content. See 'data' to set DS properties.
+   * @type string | undefined
+   */
+  readonly content?: string;
+  /**
+   * @description Components of a DS record.
+   * @type object | undefined
+   */
+  data?: {
+    /**
+     * @description Algorithm.
+     * @minimum 0
+     * @maximum 255
+     * @example 3
+     * @type number | undefined
+     */
+    algorithm?: number;
+    /**
+     * @description Digest.
+     * @type string | undefined
+     */
+    digest?: string;
+    /**
+     * @description Digest Type.
+     * @minimum 0
+     * @maximum 255
+     * @example 1
+     * @type number | undefined
+     */
+    digest_type?: number;
+    /**
+     * @description Key Tag.
+     * @minimum 0
+     * @maximum 65535
+     * @example 1
+     * @type number | undefined
+     */
+    key_tag?: number;
+  };
+  /**
+   * @description Record type.
+   * @example DS
+   * @type string | undefined
+   */
+  type?: 'DS';
+};
+
+export type DnsRecordsHTTPSRecord = DnsRecordsDnsRecordSharedFields & {
+  /**
+   * @description Formatted HTTPS content. See 'data' to set HTTPS properties.
+   * @type string | undefined
+   */
+  readonly content?: string;
+  /**
+   * @description Components of a HTTPS record.
+   * @type object | undefined
+   */
+  data?: {
+    /**
+     * @description Priority.
+     * @minimum 0
+     * @maximum 65535
+     * @example 1
+     * @type number | undefined
+     */
+    priority?: number;
+    /**
+     * @description Target.
+     * @example .
+     * @type string | undefined
+     */
+    target?: string;
+    /**
+     * @description Value.
+     * @example alpn="h3,h2" ipv4hint="127.0.0.1" ipv6hint="::1"
+     * @type string | undefined
+     */
+    value?: string;
+  };
+  /**
+   * @description Record type.
+   * @example HTTPS
+   * @type string | undefined
+   */
+  type?: 'HTTPS';
+};
+
+export const dnsRecordsLOCRecordDataLatDirectionEnum = {
+  N: 'N',
+  S: 'S',
+} as const;
+
+export type DnsRecordsLOCRecordDataLatDirectionEnumKey = (typeof dnsRecordsLOCRecordDataLatDirectionEnum)[keyof typeof dnsRecordsLOCRecordDataLatDirectionEnum];
+
+export const dnsRecordsLOCRecordDataLongDirectionEnum = {
+  E: 'E',
+  W: 'W',
+} as const;
+
+export type DnsRecordsLOCRecordDataLongDirectionEnumKey = (typeof dnsRecordsLOCRecordDataLongDirectionEnum)[keyof typeof dnsRecordsLOCRecordDataLongDirectionEnum];
+
+export type DnsRecordsLOCRecord = DnsRecordsDnsRecordSharedFields & {
+  /**
+   * @description Formatted LOC content. See 'data' to set LOC properties.
+   * @example IN LOC 37 46 46 N 122 23 35 W 0m 100m 0m 0m
+   * @type string | undefined
+   */
+  readonly content?: string;
+  /**
+   * @description Components of a LOC record.
+   * @type object | undefined
+   */
+  data?: {
+    /**
+     * @description Altitude of location in meters.
+     * @minimum -100000
+     * @maximum 42849672.95
+     * @example 0
+     * @type number | undefined
+     */
+    altitude?: number;
+    /**
+     * @description Degrees of latitude.
+     * @minimum 0
+     * @maximum 90
+     * @example 37
+     * @type number | undefined
+     */
+    lat_degrees?: number;
+    /**
+     * @description Latitude direction.
+     * @example N
+     * @type string | undefined
+     */
+    lat_direction?: DnsRecordsLOCRecordDataLatDirectionEnumKey;
+    /**
+     * @description Minutes of latitude.
+     * @minimum 0
+     * @maximum 59
+     * @example 46
+     * @type number | undefined
+     */
+    lat_minutes?: number;
+    /**
+     * @description Seconds of latitude.
+     * @minimum 0
+     * @maximum 59.999
+     * @example 46
+     * @type number | undefined
+     */
+    lat_seconds?: number;
+    /**
+     * @description Degrees of longitude.
+     * @minimum 0
+     * @maximum 180
+     * @example 122
+     * @type number | undefined
+     */
+    long_degrees?: number;
+    /**
+     * @description Longitude direction.
+     * @example W
+     * @type string | undefined
+     */
+    long_direction?: DnsRecordsLOCRecordDataLongDirectionEnumKey;
+    /**
+     * @description Minutes of longitude.
+     * @minimum 0
+     * @maximum 59
+     * @example 23
+     * @type number | undefined
+     */
+    long_minutes?: number;
+    /**
+     * @description Seconds of longitude.
+     * @minimum 0
+     * @maximum 59.999
+     * @example 35
+     * @type number | undefined
+     */
+    long_seconds?: number;
+    /**
+     * @description Horizontal precision of location.
+     * @minimum 0
+     * @maximum 90000000
+     * @example 0
+     * @type number | undefined
+     */
+    precision_horz?: number;
+    /**
+     * @description Vertical precision of location.
+     * @minimum 0
+     * @maximum 90000000
+     * @example 0
+     * @type number | undefined
+     */
+    precision_vert?: number;
+    /**
+     * @description Size of location in meters.
+     * @minimum 0
+     * @maximum 90000000
+     * @example 100
+     * @type number | undefined
+     */
+    size?: number;
+  };
+  /**
+   * @description Record type.
+   * @example LOC
+   * @type string | undefined
+   */
+  type?: 'LOC';
+};
+
+/**
+ * @description Required for MX and URI records; ignored for other record types (but may still be returned by the API). Records with lower priorities are preferred. This field is to be deprecated in favor of the priority field within the data map.
+ * @minimum 0
+ * @maximum 65535
+ * @example 10
+ * @type number
+ */
+export type DnsRecordsPriority = number;
+
+export type DnsRecordsMXRecord = DnsRecordsDnsRecordSharedFields & {
+  /**
+   * @description A valid mail server hostname.
+   *
+   * Format: `hostname`
+   * @example mx.example.com
+   * @type string | undefined
+   */
+  content?: string;
+  /**
+   * @description Required for MX and URI records; ignored for other record types (but may still be returned by the API). Records with lower priorities are preferred. This field is to be deprecated in favor of the priority field within the data map.
+   * @minimum 0
+   * @maximum 65535
+   * @example 10
+   * @type number | undefined
+   */
+  priority?: DnsRecordsPriority;
+  /**
+   * @description Record type.
+   * @example MX
+   * @type string | undefined
+   */
+  type?: 'MX';
+};
+
+export type DnsRecordsNAPTRRecord = DnsRecordsDnsRecordSharedFields & {
+  /**
+   * @description Formatted NAPTR content. See 'data' to set NAPTR properties.
+   * @type string | undefined
+   */
+  readonly content?: string;
+  /**
+   * @description Components of a NAPTR record.
+   * @type object | undefined
+   */
+  data?: {
+    /**
+     * @description Flags.
+     * @type string | undefined
+     */
+    flags?: string;
+    /**
+     * @description Order.
+     * @minimum 0
+     * @maximum 65535
+     * @example 100
+     * @type number | undefined
+     */
+    order?: number;
+    /**
+     * @description Preference.
+     * @minimum 0
+     * @maximum 65535
+     * @example 10
+     * @type number | undefined
+     */
+    preference?: number;
+    /**
+     * @description Regex.
+     * @type string | undefined
+     */
+    regex?: string;
+    /**
+     * @description Replacement.
+     * @type string | undefined
+     */
+    replacement?: string;
+    /**
+     * @description Service.
+     * @type string | undefined
+     */
+    service?: string;
+  };
+  /**
+   * @description Record type.
+   * @example NAPTR
+   * @type string | undefined
+   */
+  type?: 'NAPTR';
+};
+
+export type DnsRecordsNSRecord = DnsRecordsDnsRecordSharedFields & {
+  /**
+   * @description A valid name server host name.
+   * @example ns1.example.com
+   * @type string | undefined
+   */
+  content?: string;
+  /**
+   * @description Record type.
+   * @example NS
+   * @type string | undefined
+   */
+  type?: 'NS';
+};
+
+export type DnsRecordsOPENPGPKEYRecord = DnsRecordsDnsRecordSharedFields & {
+  /**
+   * @description A single Base64-encoded OpenPGP Transferable Public Key (RFC 4880 Section 11.1)
+   * @type string | undefined
+   */
+  content?: string;
+  /**
+   * @description Record type.
+   * @example OPENPGPKEY
+   * @type string | undefined
+   */
+  type?: 'OPENPGPKEY';
+};
+
+export type DnsRecordsPTRRecord = DnsRecordsDnsRecordSharedFields & {
+  /**
+   * @description Domain name pointing to the address.
+   * @example example.com
+   * @type string | undefined
+   */
+  content?: string;
+  /**
+   * @description Record type.
+   * @example PTR
+   * @type string | undefined
+   */
+  type?: 'PTR';
+};
+
+export type DnsRecordsSMIMEARecord = DnsRecordsDnsRecordSharedFields & {
+  /**
+   * @description Formatted SMIMEA content. See 'data' to set SMIMEA properties.
+   * @type string | undefined
+   */
+  readonly content?: string;
+  /**
+   * @description Components of a SMIMEA record.
+   * @type object | undefined
+   */
+  data?: {
+    /**
+     * @description Certificate.
+     * @type string | undefined
+     */
+    certificate?: string;
+    /**
+     * @description Matching Type.
+     * @minimum 0
+     * @maximum 255
+     * @example 0
+     * @type number | undefined
+     */
+    matching_type?: number;
+    /**
+     * @description Selector.
+     * @minimum 0
+     * @maximum 255
+     * @example 0
+     * @type number | undefined
+     */
+    selector?: number;
+    /**
+     * @description Usage.
+     * @minimum 0
+     * @maximum 255
+     * @example 3
+     * @type number | undefined
+     */
+    usage?: number;
+  };
+  /**
+   * @description Record type.
+   * @example SMIMEA
+   * @type string | undefined
+   */
+  type?: 'SMIMEA';
+};
+
+export type DnsRecordsSRVRecord = DnsRecordsDnsRecordSharedFields & {
+  /**
+   * @description Priority, weight, port, and SRV target. See 'data' for setting the individual component values.
+   * @example 10 IN SRV 5 8806 example.com.
+   * @type string | undefined
+   */
+  readonly content?: string;
+  /**
+   * @description Components of a SRV record.
+   * @type object | undefined
+   */
+  data?: {
+    /**
+     * @description The port of the service.
+     * @minimum 0
+     * @maximum 65535
+     * @example 8806
+     * @type number | undefined
+     */
+    port?: number;
+    /**
+     * @description Required for MX and URI records; ignored for other record types (but may still be returned by the API). Records with lower priorities are preferred. This field is to be deprecated in favor of the priority field within the data map.
+     * @minimum 0
+     * @maximum 65535
+     * @example 10
+     * @type number | undefined
+     */
+    priority?: DnsRecordsPriority;
+    /**
+     * @description A valid hostname.
+     *
+     * Format: `hostname`
+     * @example example.com
+     * @type string | undefined
+     */
+    target?: string;
+    /**
+     * @description The record weight.
+     * @minimum 0
+     * @maximum 65535
+     * @example 5
+     * @type number | undefined
+     */
+    weight?: number;
+  };
+  /**
+   * @description Record type.
+   * @example SRV
+   * @type string | undefined
+   */
+  type?: 'SRV';
+};
+
+export type DnsRecordsSSHFPRecord = DnsRecordsDnsRecordSharedFields & {
+  /**
+   * @description Formatted SSHFP content. See 'data' to set SSHFP properties.
+   * @type string | undefined
+   */
+  readonly content?: string;
+  /**
+   * @description Components of a SSHFP record.
+   * @type object | undefined
+   */
+  data?: {
+    /**
+     * @description Algorithm.
+     * @minimum 0
+     * @maximum 255
+     * @example 2
+     * @type number | undefined
+     */
+    algorithm?: number;
+    /**
+     * @description Fingerprint.
+     * @type string | undefined
+     */
+    fingerprint?: string;
+    /**
+     * @description Type.
+     * @minimum 0
+     * @maximum 255
+     * @example 1
+     * @type number | undefined
+     */
+    type?: number;
+  };
+  /**
+   * @description Record type.
+   * @example SSHFP
+   * @type string | undefined
+   */
+  type?: 'SSHFP';
+};
+
+export type DnsRecordsSVCBRecord = DnsRecordsDnsRecordSharedFields & {
+  /**
+   * @description Formatted SVCB content. See 'data' to set SVCB properties.
+   * @type string | undefined
+   */
+  readonly content?: string;
+  /**
+   * @description Components of a SVCB record.
+   * @type object | undefined
+   */
+  data?: {
+    /**
+     * @description Priority.
+     * @minimum 0
+     * @maximum 65535
+     * @example 1
+     * @type number | undefined
+     */
+    priority?: number;
+    /**
+     * @description Target.
+     * @example .
+     * @type string | undefined
+     */
+    target?: string;
+    /**
+     * @description Value.
+     * @example alpn="h3,h2" ipv4hint="127.0.0.1" ipv6hint="::1"
+     * @type string | undefined
+     */
+    value?: string;
+  };
+  /**
+   * @description Record type.
+   * @example SVCB
+   * @type string | undefined
+   */
+  type?: 'SVCB';
+};
+
+export type DnsRecordsTLSARecord = DnsRecordsDnsRecordSharedFields & {
+  /**
+   * @description Formatted TLSA content. See 'data' to set TLSA properties.
+   * @type string | undefined
+   */
+  readonly content?: string;
+  /**
+   * @description Components of a TLSA record.
+   * @type object | undefined
+   */
+  data?: {
+    /**
+     * @description Certificate.
+     * @type string | undefined
+     */
+    certificate?: string;
+    /**
+     * @description Matching Type.
+     * @minimum 0
+     * @maximum 255
+     * @example 1
+     * @type number | undefined
+     */
+    matching_type?: number;
+    /**
+     * @description Selector.
+     * @minimum 0
+     * @maximum 255
+     * @example 0
+     * @type number | undefined
+     */
+    selector?: number;
+    /**
+     * @description Usage.
+     * @minimum 0
+     * @maximum 255
+     * @example 0
+     * @type number | undefined
+     */
+    usage?: number;
+  };
+  /**
+   * @description Record type.
+   * @example TLSA
+   * @type string | undefined
+   */
+  type?: 'TLSA';
+};
+
+export type DnsRecordsTXTRecord = DnsRecordsDnsRecordSharedFields & {
+  /**
+   * @description Text content for the record. The content must consist of quoted "character strings" (RFC 1035), each with a length of up to 255 bytes. Strings exceeding this allowed maximum length are automatically split.
+   *
+   * Learn more at <https://www.cloudflare.com/learning/dns/dns-records/dns-txt-record/>.
+   * @example "v=spf1 include:example.com -all"
+   * @type string | undefined
+   */
+  content?: string;
+  /**
+   * @description Record type.
+   * @example TXT
+   * @type string | undefined
+   */
+  type?: 'TXT';
+};
+
+export type DnsRecordsURIRecord = DnsRecordsDnsRecordSharedFields & {
+  /**
+   * @description Formatted URI content. See 'data' to set URI properties.
+   * @type string | undefined
+   */
+  readonly content?: string;
+  /**
+   * @description Components of a URI record.
+   * @type object | undefined
+   */
+  data?: {
+    /**
+     * @description The record content.
+     * @example http://example.com/example.html
+     * @type string | undefined
+     */
+    target?: string;
+    /**
+     * @description The record weight.
+     * @minimum 0
+     * @maximum 65535
+     * @example 20
+     * @type number | undefined
+     */
+    weight?: number;
+  };
+  /**
+   * @description Required for MX and URI records; ignored for other record types (but may still be returned by the API). Records with lower priorities are preferred. This field is to be deprecated in favor of the priority field within the data map.
+   * @minimum 0
+   * @maximum 65535
+   * @example 10
+   * @type number | undefined
+   */
+  priority?: DnsRecordsPriority;
+  /**
+   * @description Record type.
+   * @example URI
+   * @type string | undefined
+   */
+  type?: 'URI';
+};
+
+/**
+ * @example []
+ * @type array
+ */
+export type DnsRecordsMessages = {
+  /**
+   * @minimum 1000
+   * @type integer
+   */
+  code: number;
+  documentation_url?: string;
+  message: string;
+  source?: {
+    pointer?: string;
+  };
+}[];
+
+export type DnsRecordsApiResponseCommon = {
+  /**
+   * @example []
+   * @type array
+   */
+  errors: DnsRecordsMessages;
+  /**
+   * @example []
+   * @type array
+   */
+  messages: DnsRecordsMessages;
+  /**
+   * @description Whether the API call was successful.
+   * @example true
+   * @type boolean
+   */
+  success: true;
+};
+
+export type DnsRecordsApiResponseCollection = DnsRecordsApiResponseCommon & {
+  result_info?: {
+    /**
+     * @description Total number of results for the requested service.
+     * @example 1
+     * @type number | undefined
+     */
+    count?: number;
+    /**
+     * @description Current page within paginated list of results.
+     * @example 1
+     * @type number | undefined
+     */
+    page?: number;
+    /**
+     * @description Number of results per page of results.
+     * @example 20
+     * @type number | undefined
+     */
+    per_page?: number;
+    /**
+     * @description Total results available without any search parameters.
+     * @example 2000
+     * @type number | undefined
+     */
+    total_count?: number;
+    /**
+     * @description The number of total pages in the entire result set.
+     * @example 100
+     * @type number | undefined
+     */
+    total_pages?: number;
+  };
+};
+
+export type DnsRecordsApiResponseCommonFailure = {
+  /**
+   * @example [{"code":7003,"message":"No route for the URI"}]
+   * @type array
+   */
+  errors: DnsRecordsMessages;
+  /**
+   * @example []
+   * @type array
+   */
+  messages: DnsRecordsMessages;
+  result: null;
+  /**
+   * @description Whether the API call was successful.
+   * @example false
+   * @type boolean
+   */
+  success: false;
+};
+
+export type DnsRecordsApiResponseSingle = DnsRecordsApiResponseCommon;
+
+export const dnsRecordsDirection = {
+  asc: 'asc',
+  desc: 'desc',
+} as const;
+
+export type DnsRecordsDirectionKey = (typeof dnsRecordsDirection)[keyof typeof dnsRecordsDirection];
+
+/**
+ * @description Identifier.
+ * @maxLength 32
+ * @example 023e105f4ecef8ad9ca31a8372d0c353
+ * @type string
+ */
+export type DnsRecordsIdentifier = string;
+
+export type DnsRecordsDnsRecordWithoutData = DnsRecordsARecord | DnsRecordsAAAARecord | DnsRecordsCNAMERecord | DnsRecordsMXRecord | DnsRecordsNSRecord | DnsRecordsOPENPGPKEYRecord | DnsRecordsPTRRecord | DnsRecordsTXTRecord;
+
+export type DnsRecordsDnsRecordWithData = DnsRecordsCAARecord | DnsRecordsCERTRecord | DnsRecordsDNSKEYRecord | DnsRecordsDSRecord | DnsRecordsHTTPSRecord | DnsRecordsLOCRecord | DnsRecordsNAPTRRecord | DnsRecordsSMIMEARecord | DnsRecordsSRVRecord | DnsRecordsSSHFPRecord | DnsRecordsSVCBRecord | DnsRecordsTLSARecord | DnsRecordsURIRecord;
+
+export type DnsRecordsDnsRecordPost = DnsRecordsDnsRecordWithoutData | DnsRecordsDnsRecordWithData;
+
+export type DnsRecordsDnsRecordResponse = (DnsRecordsDnsRecordWithoutData | DnsRecordsDnsRecordWithData) & {
+  /**
+   * @description When the record comment was last modified. Omitted if there is no comment.
+   *
+   * Format: `date-time`
+   * @example 2024-01-01T05:20:00.12345Z
+   * @type string | undefined
+   */
+  readonly comment_modified_on?: string;
+  /**
+   * @description When the record was created.
+   *
+   * Format: `date-time`
+   * @example 2014-01-01T05:20:00.12345Z
+   * @type string
+   */
+  readonly created_on: string;
+  /**
+   * @description Identifier.
+   * @maxLength 32
+   * @example 023e105f4ecef8ad9ca31a8372d0c353
+   * @type string
+   */
+  id: DnsRecordsIdentifier;
+  /**
+   * @description Extra Cloudflare-specific metadata about the record.
+   * @type object
+   */
+  readonly meta: {
+    /**
+     * @description Whether this glue record is not served because a shallower NS delegation takes precedence over the deeper delegation that needs it. Present only when true; reachable glue carries only `is_glue`. See [Unreachable glue records](https://developers.cloudflare.com/dns/manage-dns-records/reference/shadowed-records#unreachable-glue-records).
+     *
+     * @example true
+     * @type boolean | undefined
+     */
+    readonly dead_glue?: boolean;
+    /**
+     * @description Whether this A or AAAA record is glue for a subdomain NS delegation. See [Glue records](https://developers.cloudflare.com/dns/manage-dns-records/reference/shadowed-records#glue-records).
+     *
+     * @example true
+     * @type boolean | undefined
+     */
+    readonly is_glue?: boolean;
+    /**
+     * @description IDs of the NS records that shadow this record. See [Shadowed records](https://developers.cloudflare.com/dns/manage-dns-records/reference/shadowed-records).
+     *
+     * @type array | undefined
+     */
+    readonly shadowed_by?: string[];
+    /**
+     * @description Number of records shadowed by this NS delegation. See [Shadowed records](https://developers.cloudflare.com/dns/manage-dns-records/reference/shadowed-records).
+     *
+     * @minimum 0
+     * @maximum 10000
+     * @example 42
+     * @type integer | undefined
+     */
+    readonly shadowed_records_count?: number;
+  };
+  /**
+   * @description When the record was last modified.
+   *
+   * Format: `date-time`
+   * @example 2014-01-01T05:20:00.12345Z
+   * @type string
+   */
+  readonly modified_on: string;
+  /**
+   * @description Whether the record can be proxied by Cloudflare or not.
+   * @example true
+   * @type boolean
+   */
+  readonly proxiable: boolean;
+  /**
+   * @description When the record tags were last modified. Omitted if there are no tags.
+   *
+   * Format: `date-time`
+   * @example 2025-01-01T05:20:00.12345Z
+   * @type string | undefined
+   */
+  readonly tags_modified_on?: string;
+};
+
+export type DnsRecordsDnsResponseCollection = DnsRecordsApiResponseCollection & {
+  result?: DnsRecordsDnsRecordResponse[];
+};
+
+export type DnsRecordsDnsResponseSingle = DnsRecordsApiResponseSingle & {
+  result?: DnsRecordsDnsRecordResponse;
+};
+
+export const dnsRecordsMatch = {
+  any: 'any',
+  all: 'all',
+} as const;
+
+export type DnsRecordsMatchKey = (typeof dnsRecordsMatch)[keyof typeof dnsRecordsMatch];
+
+export const dnsRecordsOrder = {
+  type: 'type',
+  name: 'name',
+  content: 'content',
+  ttl: 'ttl',
+  proxied: 'proxied',
+} as const;
+
+export type DnsRecordsOrderKey = (typeof dnsRecordsOrder)[keyof typeof dnsRecordsOrder];
+
+/**
+ * @description Page number of paginated results.
+ * @minimum 1
+ * @default 1
+ * @type number
+ */
+export type DnsRecordsPage = number;
+
+/**
+ * @description Number of DNS records per page.
+ * @minimum 1
+ * @maximum 5000000
+ * @default 100
+ * @example 5
+ * @type number
+ */
+export type DnsRecordsPerPage = number;
+
+/**
+ * @description Allows searching in multiple properties of a DNS record simultaneously. This parameter is intended for human users, not automation. Its exact behavior is intentionally left unspecified and is subject to change in the future. This parameter works independently of the `match` setting. For automated searches, please use the other available parameters.
+ *
+ * @example www.cloudflare.com
+ * @type string
+ */
+export type DnsRecordsSearch = string;
+
+export const dnsRecordsTagMatch = {
+  any: 'any',
+  all: 'all',
+} as const;
+
+export type DnsRecordsTagMatchKey = (typeof dnsRecordsTagMatch)[keyof typeof dnsRecordsTagMatch];
+
+export const dnsRecordsType = {
+  A: 'A',
+  AAAA: 'AAAA',
+  CAA: 'CAA',
+  CERT: 'CERT',
+  CNAME: 'CNAME',
+  DNSKEY: 'DNSKEY',
+  DS: 'DS',
+  HTTPS: 'HTTPS',
+  LOC: 'LOC',
+  MX: 'MX',
+  NAPTR: 'NAPTR',
+  NS: 'NS',
+  OPENPGPKEY: 'OPENPGPKEY',
+  PTR: 'PTR',
+  SMIMEA: 'SMIMEA',
+  SRV: 'SRV',
+  SSHFP: 'SSHFP',
+  SVCB: 'SVCB',
+  TLSA: 'TLSA',
+  TXT: 'TXT',
+  URI: 'URI',
+} as const;
+
+export type DnsRecordsTypeKey = (typeof dnsRecordsType)[keyof typeof dnsRecordsType];
+
+/**
  * @description Access application ID is required only for access_application_policy resources
  *
  * Format: `uuid`
@@ -1441,6 +2671,68 @@ export const resourceTaggingZoneResourceType = {
 
 export type ResourceTaggingZoneResourceTypeKey = (typeof resourceTaggingZoneResourceType)[keyof typeof resourceTaggingZoneResourceType];
 
+export type WorkersDomain = {
+  /**
+   * @description ID of the TLS certificate issued for the domain.
+   *
+   * Format: `uuid`
+   * @example 9fdf92c8-64c2-4a3d-b1af-e15304961145
+   * @type string
+   */
+  readonly cert_id: string;
+  /**
+   * @description Whether the configured hostname is routable for the domain. If disabled, then requests to the configured hostname will not be routed to the configured Worker. If disabled, then preview routing must be enabled, and only subdomains of the configured hostname will be routable.
+   * @default true
+   * @example true
+   * @type boolean
+   */
+  enabled: boolean;
+  /**
+   * @description Worker environment associated with the domain.
+   * @deprecated
+   * @example production
+   * @type string
+   */
+  readonly environment: string;
+  /**
+   * @description Hostname of the domain. Can be either the zone apex or a subdomain of the zone. Requests to this hostname will be routed to the configured Worker.
+   * @example app.example.com
+   * @type string
+   */
+  hostname: string;
+  /**
+   * @description Immutable ID of the domain.
+   * @example dbe10b4bc17c295377eabd600e1787fd
+   * @type string
+   */
+  readonly id: string;
+  /**
+   * @description Whether previews are routable for the domain. If enabled, previews will be routable as subdomains of the configured hostname. For example, if the configured hostname is `app.example.com`, then requests to `my-feature.app.example.com` will be routed to the preview with slug `my-feature`, if such a preview exists. If preview routing is disabled, then hostname routing must be enabled.
+   * @default false
+   * @example false
+   * @type boolean
+   */
+  previews_enabled: boolean;
+  /**
+   * @description Name of the Worker associated with the domain. Requests to the configured hostname will be routed to this Worker.
+   * @example my-worker
+   * @type string
+   */
+  service: string;
+  /**
+   * @description ID of the zone containing the domain hostname.
+   * @example 593c9c94de529bbbfaac7c53ced0447d
+   * @type string
+   */
+  zone_id: string;
+  /**
+   * @description Name of the zone containing the domain hostname.
+   * @example example.com
+   * @type string
+   */
+  zone_name: string;
+};
+
 /**
  * @example []
  * @type array
@@ -1857,6 +3149,45 @@ export type WorkersApiResponseCommon = {
    * @type boolean
    */
   success: true;
+};
+
+export type WorkersApiResponseCollection = WorkersApiResponseCommon & {
+  result_info?: {
+    /**
+     * @description Total number of results for the requested service.
+     * @example 1
+     * @type number | undefined
+     */
+    count?: number;
+    /**
+     * @description Current page within paginated list of results.
+     * @example 1
+     * @type number | undefined
+     */
+    page?: number;
+    /**
+     * @description Number of results per page of results.
+     * @example 20
+     * @type number | undefined
+     */
+    per_page?: number;
+    /**
+     * @description Total results available without any search parameters.
+     * @example 2000
+     * @type number | undefined
+     */
+    total_count?: number;
+    /**
+     * @description The number of total pages in the entire result set.
+     * @example 100
+     * @type number | undefined
+     */
+    total_pages?: number;
+  };
+};
+
+export type WorkersApiResponseNullResult = WorkersApiResponseCommon & {
+  result?: null;
 };
 
 /**
@@ -2379,6 +3710,14 @@ export type WorkersScriptResponseCollection = WorkersApiResponseCommon & {
     routes?: WorkersRoute[] | null;
   })[];
 };
+
+/**
+ * @description Name of the script.
+ * @pattern ^[a-z0-9_][a-z0-9-_]*$
+ * @example this-is_my_script-01
+ * @type string
+ */
+export type WorkersScriptName = string;
 
 export type WorkersSubdomain2 = {
   /**
@@ -3151,6 +4490,121 @@ export type TagsListResponses = {
  */
 export type TagsListResponse = TagsListStatus200;
 
+export type WorkersDomainsListPath = {
+  /**
+   * @description Identifier.
+   * @maxLength 32
+   * @example 023e105f4ecef8ad9ca31a8372d0c353
+   * @type string
+   */
+  account_id: WorkersIdentifier;
+};
+
+export type WorkersDomainsListQuery = {
+  /**
+   * @description ID of the zone containing the domain hostname.
+   * @example 593c9c94de529bbbfaac7c53ced0447d
+   * @type string | undefined
+   */
+  zone_id?: string;
+  /**
+   * @description Name of the zone containing the domain hostname.
+   * @example example.com
+   * @type string | undefined
+   */
+  zone_name?: string;
+  /**
+   * @description Name of the Worker associated with the domain.
+   * @example my-worker
+   * @type string | undefined
+   */
+  service?: string;
+  /**
+   * @description Hostname of the domain.
+   * @example app.example.com
+   * @type string | undefined
+   */
+  hostname?: string;
+  /**
+   * @description Worker environment associated with the domain.
+   * @example production
+   * @type string | undefined
+   */
+  environment?: string;
+  /**
+   * @description Whether previews are routable for the domain.
+   * @example false
+   * @type boolean | undefined
+   */
+  previews_enabled?: boolean;
+  /**
+   * @description Whether the configured hostname is routable for the domain.
+   * @example true
+   * @type boolean | undefined
+   */
+  enabled?: boolean;
+};
+
+export type WorkersDomainsListStatus200 = WorkersApiResponseCollection & {
+  result: WorkersDomain[];
+};
+
+export type WorkersDomainsListStatus4XX = WorkersApiResponseCommonFailure;
+
+export type WorkersDomainsListOptions = {
+  body?: never;
+  path: WorkersDomainsListPath;
+  query?: WorkersDomainsListQuery;
+  headers?: never;
+};
+
+export type WorkersDomainsListResponses = {
+  '200': WorkersDomainsListStatus200;
+  '4XX': WorkersDomainsListStatus4XX;
+};
+
+/**
+ * @description Union of all possible responses
+ */
+export type WorkersDomainsListResponse = WorkersDomainsListStatus200;
+
+export type WorkersDomainsDeletePath = {
+  /**
+   * @description Identifier.
+   * @maxLength 32
+   * @example 023e105f4ecef8ad9ca31a8372d0c353
+   * @type string
+   */
+  account_id: WorkersIdentifier;
+  /**
+   * @description ID of the domain.
+   * @example dbe10b4bc17c295377eabd600e1787fd
+   * @type string
+   */
+  domain_id: string;
+};
+
+export type WorkersDomainsDeleteStatus200 = WorkersApiResponseCommon;
+
+export type WorkersDomainsDeleteStatus4XX = WorkersApiResponseCommonFailure;
+
+export type WorkersDomainsDeleteOptions = {
+  body?: never;
+  path: WorkersDomainsDeletePath;
+  query?: never;
+  headers?: never;
+};
+
+export type WorkersDomainsDeleteResponses = {
+  '200': WorkersDomainsDeleteStatus200;
+  '4XX': WorkersDomainsDeleteStatus4XX;
+};
+
+/**
+ * @description Union of all possible responses
+ */
+export type WorkersDomainsDeleteResponse = WorkersDomainsDeleteStatus200;
+
 export type WorkerScriptListWorkersPath = {
   /**
    * @description Identifier.
@@ -3190,6 +4644,52 @@ export type WorkerScriptListWorkersResponses = {
  * @description Union of all possible responses
  */
 export type WorkerScriptListWorkersResponse = WorkerScriptListWorkersStatus200;
+
+export type WorkerScriptDeleteWorkerPath = {
+  /**
+   * @description Identifier.
+   * @maxLength 32
+   * @example 023e105f4ecef8ad9ca31a8372d0c353
+   * @type string
+   */
+  account_id: WorkersIdentifier;
+  /**
+   * @description Name of the script.
+   * @pattern ^[a-z0-9_][a-z0-9-_]*$
+   * @example this-is_my_script-01
+   * @type string
+   */
+  script_name: WorkersScriptName;
+};
+
+export type WorkerScriptDeleteWorkerQuery = {
+  /**
+   * @description If true, delete the Worker even when other Workers still reference it. Service bindings in those Workers may be left broken. Durable Object namespaces implemented by the deleted Worker are deleted even if other Workers reference them.
+   * @type boolean | undefined
+   */
+  force?: boolean;
+};
+
+export type WorkerScriptDeleteWorkerStatus200 = WorkersApiResponseNullResult;
+
+export type WorkerScriptDeleteWorkerStatus4XX = WorkersApiResponseCommonFailure;
+
+export type WorkerScriptDeleteWorkerOptions = {
+  body?: never;
+  path: WorkerScriptDeleteWorkerPath;
+  query?: WorkerScriptDeleteWorkerQuery;
+  headers?: never;
+};
+
+export type WorkerScriptDeleteWorkerResponses = {
+  '200': WorkerScriptDeleteWorkerStatus200;
+  '4XX': WorkerScriptDeleteWorkerStatus4XX;
+};
+
+/**
+ * @description Union of all possible responses
+ */
+export type WorkerScriptDeleteWorkerResponse = WorkerScriptDeleteWorkerStatus200;
 
 export type WorkerSubdomainGetSubdomainPath = {
   /**
@@ -3371,6 +4871,452 @@ export type ZonesGetResponses = {
  * @description Union of all possible responses
  */
 export type ZonesGetResponse = ZonesGetStatus200;
+
+export type DnsRecordsForAZoneListDnsRecordsPath = {
+  /**
+   * @description Identifier.
+   * @maxLength 32
+   * @example 023e105f4ecef8ad9ca31a8372d0c353
+   * @type string
+   */
+  zone_id: DnsRecordsIdentifier;
+};
+
+export type DnsRecordsForAZoneListDnsRecordsQuery = {
+  /**
+   * @description Exact value of the DNS record name. This is a convenience alias for `name.exact`.
+   *
+   * @example www.example.com
+   * @type string | undefined
+   */
+  name?: string;
+  /**
+   * @description Exact value of the DNS record name. Name filters are case-insensitive.
+   *
+   * @example www.example.com
+   * @type string | undefined
+   */
+  'name.exact'?: string;
+  /**
+   * @description Substring of the DNS record name. Name filters are case-insensitive.
+   *
+   * @example w.example.
+   * @type string | undefined
+   */
+  'name.contains'?: string;
+  /**
+   * @description Prefix of the DNS record name. Name filters are case-insensitive.
+   *
+   * @example www.example
+   * @type string | undefined
+   */
+  'name.startswith'?: string;
+  /**
+   * @description Suffix of the DNS record name. Name filters are case-insensitive.
+   *
+   * @example .example.com
+   * @type string | undefined
+   */
+  'name.endswith'?: string;
+  /**
+   * @description Record type.
+   * @example A
+   * @type string | undefined
+   */
+  type?: DnsRecordsTypeKey;
+  /**
+   * @description Exact value of the DNS record content. This is a convenience alias for `content.exact`.
+   *
+   * @example 127.0.0.1
+   * @type string | undefined
+   */
+  content?: string;
+  /**
+   * @description Exact value of the DNS record content. Content filters are case-insensitive.
+   *
+   * @example 127.0.0.1
+   * @type string | undefined
+   */
+  'content.exact'?: string;
+  /**
+   * @description Substring of the DNS record content. Content filters are case-insensitive.
+   *
+   * @example 7.0.0.
+   * @type string | undefined
+   */
+  'content.contains'?: string;
+  /**
+   * @description Prefix of the DNS record content. Content filters are case-insensitive.
+   *
+   * @example 127.0.
+   * @type string | undefined
+   */
+  'content.startswith'?: string;
+  /**
+   * @description Suffix of the DNS record content. Content filters are case-insensitive.
+   *
+   * @example .0.1
+   * @type string | undefined
+   */
+  'content.endswith'?: string;
+  /**
+   * @description Whether the record is receiving the performance and security benefits of Cloudflare.
+   * @default false
+   * @example true
+   * @type boolean | undefined
+   */
+  proxied?: DnsRecordsProxied;
+  /**
+   * @description Whether to match all search requirements or at least one (any). If set to `all`, acts like a logical AND between filters. If set to `any`, acts like a logical OR instead. Note that the interaction between tag filters is controlled by the `tag-match` parameter instead.
+   *
+   * @default 'all'
+   * @example any
+   * @type string | undefined
+   */
+  match?: DnsRecordsMatchKey;
+  /**
+   * @description Exact value of the DNS record comment. This is a convenience alias for `comment.exact`.
+   *
+   * @example Hello, world
+   * @type string | undefined
+   */
+  comment?: string;
+  /**
+   * @description If this parameter is present, only records *with* a comment are returned.
+   *
+   * @type string | undefined
+   */
+  'comment.present'?: string;
+  /**
+   * @description If this parameter is present, only records *without* a comment are returned.
+   *
+   * @type string | undefined
+   */
+  'comment.absent'?: string;
+  /**
+   * @description Exact value of the DNS record comment. Comment filters are case-insensitive.
+   *
+   * @example Hello, world
+   * @type string | undefined
+   */
+  'comment.exact'?: string;
+  /**
+   * @description Substring of the DNS record comment. Comment filters are case-insensitive.
+   *
+   * @example ello, worl
+   * @type string | undefined
+   */
+  'comment.contains'?: string;
+  /**
+   * @description Prefix of the DNS record comment. Comment filters are case-insensitive.
+   *
+   * @example Hello, w
+   * @type string | undefined
+   */
+  'comment.startswith'?: string;
+  /**
+   * @description Suffix of the DNS record comment. Comment filters are case-insensitive.
+   *
+   * @example o, world
+   * @type string | undefined
+   */
+  'comment.endswith'?: string;
+  /**
+   * @description Condition on the DNS record tag.
+   *
+   * Parameter values can be of the form `<tag-name>:<tag-value>` to search for an exact `name:value` pair, or just `<tag-name>` to search for records with a specific tag name regardless of its value.
+   *
+   * This is a convenience shorthand for the more powerful `tag.<predicate>` parameters.
+   * Examples:
+   * - `tag=important` is equivalent to `tag.present=important`
+   * - `tag=team:DNS` is equivalent to `tag.exact=team:DNS`
+   *
+   * @example team:DNS
+   * @type string | undefined
+   */
+  tag?: string;
+  /**
+   * @description Name of a tag which must be present on the DNS record. Tag filters are case-insensitive.
+   *
+   * @example important
+   * @type string | undefined
+   */
+  'tag.present'?: string;
+  /**
+   * @description Name of a tag which must *not* be present on the DNS record. Tag filters are case-insensitive.
+   *
+   * @example important
+   * @type string | undefined
+   */
+  'tag.absent'?: string;
+  /**
+   * @description A tag and value, of the form `<tag-name>:<tag-value>`. The API will only return DNS records that have a tag named `<tag-name>` whose value is `<tag-value>`. Tag filters are case-insensitive.
+   *
+   * @example greeting:Hello, world
+   * @type string | undefined
+   */
+  'tag.exact'?: string;
+  /**
+   * @description A tag and value, of the form `<tag-name>:<tag-value>`. The API will only return DNS records that have a tag named `<tag-name>` whose value contains `<tag-value>`. Tag filters are case-insensitive.
+   *
+   * @example greeting:ello, worl
+   * @type string | undefined
+   */
+  'tag.contains'?: string;
+  /**
+   * @description A tag and value, of the form `<tag-name>:<tag-value>`. The API will only return DNS records that have a tag named `<tag-name>` whose value starts with `<tag-value>`. Tag filters are case-insensitive.
+   *
+   * @example greeting:Hello, w
+   * @type string | undefined
+   */
+  'tag.startswith'?: string;
+  /**
+   * @description A tag and value, of the form `<tag-name>:<tag-value>`. The API will only return DNS records that have a tag named `<tag-name>` whose value ends with `<tag-value>`. Tag filters are case-insensitive.
+   *
+   * @example greeting:o, world
+   * @type string | undefined
+   */
+  'tag.endswith'?: string;
+  /**
+   * @description Allows searching in multiple properties of a DNS record simultaneously. This parameter is intended for human users, not automation. Its exact behavior is intentionally left unspecified and is subject to change in the future. This parameter works independently of the `match` setting. For automated searches, please use the other available parameters.
+   *
+   * @example www.cloudflare.com
+   * @type string | undefined
+   */
+  search?: DnsRecordsSearch;
+  /**
+   * @description Whether to match all tag search requirements or at least one (any). If set to `all`, acts like a logical AND between tag filters. If set to `any`, acts like a logical OR instead. Note that the regular `match` parameter is still used to combine the resulting condition with other filters that aren't related to tags.
+   *
+   * @default 'all'
+   * @example any
+   * @type string | undefined
+   */
+  tag_match?: DnsRecordsTagMatchKey;
+  /**
+   * @description Page number of paginated results.
+   * @minimum 1
+   * @default 1
+   * @type number | undefined
+   */
+  page?: DnsRecordsPage;
+  /**
+   * @description Number of DNS records per page.
+   * @minimum 1
+   * @maximum 5000000
+   * @default 100
+   * @example 5
+   * @type number | undefined
+   */
+  per_page?: DnsRecordsPerPage;
+  /**
+   * @description Field to order DNS records by.
+   * @default 'type'
+   * @type string | undefined
+   */
+  order?: DnsRecordsOrderKey;
+  /**
+   * @description Direction to order DNS records in.
+   * @default 'asc'
+   * @type string | undefined
+   */
+  direction?: DnsRecordsDirectionKey;
+  /**
+   * @description Whether to include shadow metadata in the `meta` field of each record in the response. See [Shadowed records](https://developers.cloudflare.com/dns/manage-dns-records/reference/shadowed-records).
+   *
+   * @default false
+   * @example true
+   * @type boolean | undefined
+   */
+  include_shadow_metadata?: boolean;
+  /**
+   * @description Filters the response to records at or below the specified NS delegation name. NS, DS, and NSEC records at the delegation name are excluded because they are not shadowed by that delegation. Those record types are included only when they exist below the delegation. The value must be a non-apex subdomain of the zone. Requires `include_shadow_metadata=true`. See [Shadowed records](https://developers.cloudflare.com/dns/manage-dns-records/reference/shadowed-records).
+   *
+   * @example sub.example.com
+   * @type string | undefined
+   */
+  shadowed_by_name?: string;
+  /**
+   * @description Returns NS records that shadow the given name, searching at the name itself and each of its ancestor names within the zone, excluding the zone apex. The value must be a subdomain of the zone; the zone apex is not accepted. See [Shadowed records](https://developers.cloudflare.com/dns/manage-dns-records/reference/shadowed-records).
+   *
+   * @example www.sub.example.com
+   * @type string | undefined
+   */
+  shadowing_name?: string;
+};
+
+export type DnsRecordsForAZoneListDnsRecordsStatus200 = DnsRecordsDnsResponseCollection;
+
+export type DnsRecordsForAZoneListDnsRecordsStatus4XX = DnsRecordsApiResponseCommonFailure;
+
+export type DnsRecordsForAZoneListDnsRecordsOptions = {
+  body?: never;
+  path: DnsRecordsForAZoneListDnsRecordsPath;
+  query?: DnsRecordsForAZoneListDnsRecordsQuery;
+  headers?: never;
+};
+
+export type DnsRecordsForAZoneListDnsRecordsResponses = {
+  '200': DnsRecordsForAZoneListDnsRecordsStatus200;
+  '4XX': DnsRecordsForAZoneListDnsRecordsStatus4XX;
+};
+
+/**
+ * @description Union of all possible responses
+ */
+export type DnsRecordsForAZoneListDnsRecordsResponse = DnsRecordsForAZoneListDnsRecordsStatus200;
+
+export type DnsRecordsForAZoneCreateDnsRecordPath = {
+  /**
+   * @description Identifier.
+   * @maxLength 32
+   * @example 023e105f4ecef8ad9ca31a8372d0c353
+   * @type string
+   */
+  zone_id: DnsRecordsIdentifier;
+};
+
+export type DnsRecordsForAZoneCreateDnsRecordQuery = {
+  /**
+   * @description Whether to include shadow metadata in the `meta` field of each record in the response. See [Shadowed records](https://developers.cloudflare.com/dns/manage-dns-records/reference/shadowed-records).
+   *
+   * @default false
+   * @example true
+   * @type boolean | undefined
+   */
+  include_shadow_metadata?: boolean;
+};
+
+export type DnsRecordsForAZoneCreateDnsRecordStatus200 = DnsRecordsDnsResponseSingle;
+
+export type DnsRecordsForAZoneCreateDnsRecordStatus4XX = DnsRecordsApiResponseCommonFailure;
+
+export type DnsRecordsForAZoneCreateDnsRecordBody = DnsRecordsDnsRecordPost;
+
+export type DnsRecordsForAZoneCreateDnsRecordOptions = {
+  body: DnsRecordsForAZoneCreateDnsRecordBody;
+  path: DnsRecordsForAZoneCreateDnsRecordPath;
+  query?: DnsRecordsForAZoneCreateDnsRecordQuery;
+  headers?: never;
+};
+
+export type DnsRecordsForAZoneCreateDnsRecordResponses = {
+  '200': DnsRecordsForAZoneCreateDnsRecordStatus200;
+  '4XX': DnsRecordsForAZoneCreateDnsRecordStatus4XX;
+};
+
+/**
+ * @description Union of all possible responses
+ */
+export type DnsRecordsForAZoneCreateDnsRecordResponse = DnsRecordsForAZoneCreateDnsRecordStatus200;
+
+export type DnsRecordsForAZoneDeleteDnsRecordPath = {
+  /**
+   * @description Identifier.
+   * @maxLength 32
+   * @example 023e105f4ecef8ad9ca31a8372d0c353
+   * @type string
+   */
+  dns_record_id: DnsRecordsIdentifier;
+  /**
+   * @description Identifier.
+   * @maxLength 32
+   * @example 023e105f4ecef8ad9ca31a8372d0c353
+   * @type string
+   */
+  zone_id: DnsRecordsIdentifier;
+};
+
+export type DnsRecordsForAZoneDeleteDnsRecordStatus200 = {
+  result?: {
+    /**
+     * @description Identifier.
+     * @maxLength 32
+     * @example 023e105f4ecef8ad9ca31a8372d0c353
+     * @type string | undefined
+     */
+    id?: DnsRecordsIdentifier;
+  };
+};
+
+export type DnsRecordsForAZoneDeleteDnsRecordStatus4XX = {
+  result?: {
+    /**
+     * @description Identifier.
+     * @maxLength 32
+     * @example 023e105f4ecef8ad9ca31a8372d0c353
+     * @type string | undefined
+     */
+    id?: DnsRecordsIdentifier;
+  };
+} & DnsRecordsApiResponseCommonFailure;
+
+export type DnsRecordsForAZoneDeleteDnsRecordOptions = {
+  body?: never;
+  path: DnsRecordsForAZoneDeleteDnsRecordPath;
+  query?: never;
+  headers?: never;
+};
+
+export type DnsRecordsForAZoneDeleteDnsRecordResponses = {
+  '200': DnsRecordsForAZoneDeleteDnsRecordStatus200;
+  '4XX': DnsRecordsForAZoneDeleteDnsRecordStatus4XX;
+};
+
+/**
+ * @description Union of all possible responses
+ */
+export type DnsRecordsForAZoneDeleteDnsRecordResponse = DnsRecordsForAZoneDeleteDnsRecordStatus200;
+
+export type DnsRecordsForAZoneUpdateDnsRecordPath = {
+  /**
+   * @description Identifier.
+   * @maxLength 32
+   * @example 023e105f4ecef8ad9ca31a8372d0c353
+   * @type string
+   */
+  dns_record_id: DnsRecordsIdentifier;
+  /**
+   * @description Identifier.
+   * @maxLength 32
+   * @example 023e105f4ecef8ad9ca31a8372d0c353
+   * @type string
+   */
+  zone_id: DnsRecordsIdentifier;
+};
+
+export type DnsRecordsForAZoneUpdateDnsRecordQuery = {
+  /**
+   * @description Whether to include shadow metadata in the `meta` field of each record in the response. See [Shadowed records](https://developers.cloudflare.com/dns/manage-dns-records/reference/shadowed-records).
+   *
+   * @default false
+   * @example true
+   * @type boolean | undefined
+   */
+  include_shadow_metadata?: boolean;
+};
+
+export type DnsRecordsForAZoneUpdateDnsRecordStatus200 = DnsRecordsDnsResponseSingle;
+
+export type DnsRecordsForAZoneUpdateDnsRecordStatus4XX = DnsRecordsApiResponseCommonFailure;
+
+export type DnsRecordsForAZoneUpdateDnsRecordBody = DnsRecordsDnsRecordPost;
+
+export type DnsRecordsForAZoneUpdateDnsRecordOptions = {
+  body: DnsRecordsForAZoneUpdateDnsRecordBody;
+  path: DnsRecordsForAZoneUpdateDnsRecordPath;
+  query?: DnsRecordsForAZoneUpdateDnsRecordQuery;
+  headers?: never;
+};
+
+export type DnsRecordsForAZoneUpdateDnsRecordResponses = {
+  '200': DnsRecordsForAZoneUpdateDnsRecordStatus200;
+  '4XX': DnsRecordsForAZoneUpdateDnsRecordStatus4XX;
+};
+
+/**
+ * @description Union of all possible responses
+ */
+export type DnsRecordsForAZoneUpdateDnsRecordResponse = DnsRecordsForAZoneUpdateDnsRecordStatus200;
 
 export type TagsZoneGetPath = {
   /**

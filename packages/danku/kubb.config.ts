@@ -6,18 +6,23 @@ import { defineConfig } from "kubb/config";
 // Kubb sends anonymous usage data unless this is set; it reads it when it would send.
 process.env.KUBB_DISABLE_TELEMETRY = "1";
 
-// Cloudflare operationIds, as listed in their API docs. Anchored: a plain string matches anywhere,
-// so "tags-list" alone would also pull in "tags-list-keys" and "access-tags-list-tags".
 const include = [
   "d1-create-database",
   "d1-list-databases",
+  "dns-records-for-a-zone-create-dns-record",
+  "dns-records-for-a-zone-delete-dns-record",
+  "dns-records-for-a-zone-list-dns-records",
+  "dns-records-for-a-zone-update-dns-record",
   "tags-get",
   "tags-set",
   "tags-list",
   "tags-zone-get",
   "tags-zone-set",
+  "worker-script-delete-worker",
   "worker-script-list-workers",
   "worker-subdomain-get-subdomain",
+  "workers.domains.delete",
+  "workers.domains.list",
   "zones-get",
 ].map((id) => ({
   type: "operationId" as const,
