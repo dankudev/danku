@@ -1,4 +1,5 @@
 import { CliError } from "../error.ts";
+import type { Run } from "../run.ts";
 
 /** What danku stores on every resource it creates, in place of a state file. */
 export interface Owner {
@@ -21,6 +22,12 @@ export interface Kind {
   /** Applied only when CI=true; in dev, local tools (wrangler/miniflare) provide it. */
   ciOnly: boolean;
   /**
+   * For kinds whose names you own by registering them (DNS zones): they exist before danku runs, so
+   * an untagged one with the declared name is adopted (tagged) instead of refused. Other kinds only
+   * ever touch what danku created.
+   */
+  adopt?: boolean;
+  /**
    * Resources of this kind that exist in the account: every danku-owned one, across all projects,
    * with its `owner`. Kinds whose cloud names are unique also return untagged ones, without an
    * owner, so `danku deploy` can refuse to create a name that's already taken before any change.
@@ -28,14 +35,6 @@ export interface Kind {
   list(): Promise<{ id: string; name: string; owner?: Owner; outputs: unknown }[]>;
   /** Missing for data kinds (D1, KV, R2…): their orphans are only reported, never deleted. */
   delete?(id: string): Promise<void>;
-}
-
-/**
- * The name a resource gets at the provider, e.g. `acme-db`; renames create a new resource. Used by
- * kinds when creating, and by `danku deploy` for the plan, the length check and orphan reports.
- */
-export function cloudName(owner: Owner): string {
-  return `${owner.project}-${owner.name}`;
 }
 
 /** Filled by constructors while danku/deploy.ts is imported; main() empties it before each run. */
@@ -47,12 +46,16 @@ export abstract class Resource<Inputs = unknown, Outputs = unknown> {
   outputs?: Outputs;
   id?: string;
 
+  /** Why `name` can't name a resource of this kind, or undefined when it can. */
+  static invalidName(name: string): string | undefined {
+    return /^[a-z0-9][a-z0-9-]*$/.test(name)
+      ? undefined
+      : "use lowercase letters, digits and dashes";
+  }
+
   constructor(name: string, inputs: Inputs) {
-    if (!/^[a-z0-9][a-z0-9-]*$/.test(name)) {
-      throw new CliError(
-        `${this.constructor.name} "${name}": use lowercase letters, digits and dashes`,
-      );
-    }
+    const problem = (this.constructor as typeof Resource).invalidName(name);
+    if (problem) throw new CliError(`${this.constructor.name} "${name}": ${problem}`);
     // Two declarations with the same kind and name would fight over one cloud resource.
     if (resources.some((it) => it.constructor === this.constructor && it.name === name)) {
       throw new CliError(`${this.constructor.name} "${name}" is declared twice`);
@@ -62,6 +65,39 @@ export abstract class Resource<Inputs = unknown, Outputs = unknown> {
     resources.push(this);
   }
 
-  abstract create(owner: Owner): Promise<void>;
-  abstract update(owner: Owner): Promise<void>;
+  /**
+   * The name it gets at the provider, e.g. `acme-db`; renames create a new resource. Kinds named by
+   * the outside world (a zone is its domain) return their name as is.
+   */
+  cloudName(project: string): string {
+    const name = `${project}-${this.name}`;
+    if (name.length > 63) {
+      throw new CliError(
+        `${this.constructor.name} "${this.name}": ${name} is longer than 63 characters`,
+      );
+    }
+    return name;
+  }
+
+  /**
+   * Content beyond the inputs that the hash must cover, e.g. a Worker's build output. Read before
+   * any cloud call, so a missing build stops the deploy before the first change.
+   */
+  fingerprint?(root: string): Promise<string>;
+
+  /**
+   * Runs once every resource knows what exists in the cloud, before the first change: a last chance
+   * to stop, e.g. a Worker whose domain's zone isn't active yet.
+   */
+  check?(): void;
+
+  /** Where it can be reached once deployed, printed with its plan line (a Worker's app URL). */
+  url?(project: string): string | undefined;
+
+  /**
+   * Missing for kinds danku only adopts (zones): one that doesn't exist stops the deploy.
+   * `root` is the repo root; `run` runs commands such as `wrangler deploy` (tests replace it).
+   */
+  create?(owner: Owner, root: string, run: Run): Promise<void>;
+  abstract update(owner: Owner, root: string, run: Run): Promise<void>;
 }

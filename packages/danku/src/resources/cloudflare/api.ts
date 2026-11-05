@@ -2,7 +2,10 @@ import { CliError } from "../../error.ts";
 import type { Owner } from "../resource.ts";
 import { defaultTransport } from "./generated/.kubb/client.ts";
 import { CloudflareClient } from "./generated/client.ts";
-import type { ResourceTaggingAccountResourceTypeBaseEnumKey as ResourceType } from "./generated/types.ts";
+import type {
+  ResourceTaggingAccountResourceTypeBaseEnumKey as ResourceType,
+  ResourceTaggingZoneResourceTypeBaseEnumKey as ZoneResourceType,
+} from "./generated/types.ts";
 
 /**
  * A typed Cloudflare API client, plus the `account_id` path parameter for CLOUDFLARE_ACCOUNT_ID
@@ -40,63 +43,91 @@ export function cloudflare() {
   return { client, path: { account_id: account } };
 }
 
-/** Every danku-owned resource of one type (e.g. `d1_database`), across all projects. */
-export async function listTagged(type: ResourceType): Promise<{ id: string; owner: Owner }[]> {
-  const { client, path } = cloudflare();
-  const found: { id: string; owner: Owner }[] = [];
-  let cursor: string | undefined;
-  do {
-    const { data } = await client.tagsList({
-      path,
-      // Repeated `tag` filters are ANDed: only resources that carry both danku tags.
-      query: { type: [type], tag: ["danku.project", "danku.name"], cursor },
-    });
-    for (const { id, tags } of data.result ?? []) {
-      found.push({
-        id,
-        owner: {
-          project: tags["danku.project"],
-          name: tags["danku.name"],
-          hash: tags["danku.hash"],
-        },
+type Tagged = { id: string; type: string; owner: Owner };
+let pending: Promise<Tagged[]> | undefined;
+
+/**
+ * Every danku-owned resource in the account, of every type (`d1_database`, `worker`, `zone`…),
+ * account- and zone-level alike, across all projects. One search serves every kind: kinds that ask while it runs share it, and it's
+ * forgotten once done, so each deploy reads fresh tags.
+ */
+export function listTagged(): Promise<Tagged[]> {
+  pending ??= (async () => {
+    const { client, path } = cloudflare();
+    const found: Tagged[] = [];
+    let cursor: string | undefined;
+    do {
+      const { data } = await client.tagsList({
+        path,
+        // Repeated `tag` filters are ANDed: only resources that carry both danku tags.
+        query: { tag: ["danku.project", "danku.name"], cursor },
       });
-    }
-    cursor = data.result_info?.cursor ?? undefined;
-  } while (cursor);
-  return found;
+      for (const { id, type, tags } of data.result ?? []) {
+        found.push({
+          id,
+          type,
+          owner: {
+            project: tags["danku.project"],
+            name: tags["danku.name"],
+            hash: tags["danku.hash"],
+          },
+        });
+      }
+      cursor = data.result_info?.cursor ?? undefined;
+    } while (cursor);
+    return found;
+  })().finally(() => (pending = undefined));
+  return pending;
 }
+
+/**
+ * Where a resource's tags live: account-level resources (D1, Workers) are tagged through the
+ * account, zone-level ones (the zone itself, later its DNS records) through their zone.
+ */
+export type Target =
+  | { type: ResourceType; id: string }
+  | { type: ZoneResourceType; id: string; zone: string };
 
 /** Stores the owner as danku.* tags on a resource; `keep` holds tags to leave in place. */
 export async function tag(
-  type: ResourceType,
-  id: string,
+  target: Target,
   owner: Owner,
   keep: Record<string, string> = {},
 ): Promise<void> {
   const { client, path } = cloudflare();
-  await client.tagsSet({
-    path,
-    body: {
-      resource_type: type,
-      resource_id: id,
-      tags: {
-        ...keep,
-        "danku.project": owner.project,
-        "danku.name": owner.name,
-        ...(owner.hash && { "danku.hash": owner.hash }),
-      },
-    },
-  });
+  const tags = {
+    ...keep,
+    "danku.project": owner.project,
+    "danku.name": owner.name,
+    ...(owner.hash && { "danku.hash": owner.hash }),
+  };
+  if ("zone" in target) {
+    await client.tagsZoneSet({
+      path: { zone_id: target.zone },
+      body: { resource_type: target.type, resource_id: target.id, tags },
+    });
+  } else {
+    await client.tagsSet({
+      path,
+      body: { resource_type: target.type, resource_id: target.id, tags },
+    });
+  }
 }
 
 /**
  * Like tag(), but keeps the tags users added themselves: Cloudflare's PUT replaces the whole set.
  */
-export async function retag(type: ResourceType, id: string, owner: Owner): Promise<void> {
+export async function retag(target: Target, owner: Owner): Promise<void> {
   const { client, path } = cloudflare();
-  const { data } = await client.tagsGet({
-    path,
-    query: { resource_type: type, resource_id: id },
-  });
-  await tag(type, id, owner, data.result?.tags);
+  const { data } =
+    "zone" in target
+      ? await client.tagsZoneGet({
+          path: { zone_id: target.zone },
+          query: { resource_type: target.type, resource_id: target.id },
+        })
+      : await client.tagsGet({
+          path,
+          query: { resource_type: target.type, resource_id: target.id },
+        });
+  await tag(target, owner, data.result?.tags);
 }

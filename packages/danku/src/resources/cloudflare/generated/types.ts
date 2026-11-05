@@ -508,6 +508,73 @@ export type ResourceTaggingDeleteTagsRequestAccountLevelBase = {
   resource_type: ResourceTaggingAccountResourceTypeBaseEnumKey;
 };
 
+export const resourceTaggingZoneResourceTypeBaseEnum = {
+  api_gateway_operation: 'api_gateway_operation',
+  custom_certificate: 'custom_certificate',
+  custom_hostname: 'custom_hostname',
+  dns_record: 'dns_record',
+  healthcheck: 'healthcheck',
+  load_balancer: 'load_balancer',
+  managed_client_certificate: 'managed_client_certificate',
+  worker_route: 'worker_route',
+  zone: 'zone',
+  zone_ruleset: 'zone_ruleset',
+} as const;
+
+export type ResourceTaggingZoneResourceTypeBaseEnumKey = (typeof resourceTaggingZoneResourceTypeBaseEnum)[keyof typeof resourceTaggingZoneResourceTypeBaseEnum];
+
+/**
+ * @description Request body schema for deleting tags from zone-level resources. Zone ID comes from URL path.
+ * @type object
+ */
+export type ResourceTaggingDeleteTagsRequestZoneLevelBase = {
+  /**
+   * @description Identifies the unique resource.
+   * @example 023e105f4ecef8ad9ca31a8372d0c353
+   * @type string
+   */
+  resource_id: ResourceTaggingResourceId;
+  /**
+   * @description Enum for base zone-level resource types (those with no extra required fields).
+   * @example zone
+   * @type string
+   */
+  resource_type: ResourceTaggingZoneResourceTypeBaseEnumKey;
+};
+
+export const resourceTaggingZoneResourceTypeAccessApplicationPolicyEnum = {
+  access_application_policy: 'access_application_policy',
+} as const;
+
+export type ResourceTaggingZoneResourceTypeAccessApplicationPolicyEnumKey = (typeof resourceTaggingZoneResourceTypeAccessApplicationPolicyEnum)[keyof typeof resourceTaggingZoneResourceTypeAccessApplicationPolicyEnum];
+
+/**
+ * @description Request body schema for deleting tags from access_application_policy resources.
+ * @type object
+ */
+export type ResourceTaggingDeleteTagsRequestZoneLevelAccessApplicationPolicy = {
+  /**
+   * @description Access application ID is required only for access_application_policy resources
+   *
+   * Format: `uuid`
+   * @example f174e90a-fafe-4643-bbbc-4a0ed4fc8415
+   * @type string
+   */
+  access_application_id: ResourceTaggingAccessApplicationId;
+  /**
+   * @description Identifies the unique resource.
+   * @example 023e105f4ecef8ad9ca31a8372d0c353
+   * @type string
+   */
+  resource_id: ResourceTaggingResourceId;
+  /**
+   * @description Enum for access_application_policy resource type.
+   * @example access_application_policy
+   * @type string
+   */
+  resource_type: ResourceTaggingZoneResourceTypeAccessApplicationPolicyEnumKey;
+};
+
 /**
  * @description ETag identifier for optimistic concurrency control. Formatted as "v1:<hash>" where
  * the hash is the base64url-encoded SHA-256 (truncated to 128 bits) of the tags map
@@ -643,6 +710,39 @@ export type ResourceTaggingSetTagsRequestAccountLevel = ResourceTaggingSetTagsRe
   resource_type: 'worker_version';
 } | ResourceTaggingSetTagsRequestAccountLevelBase & {
   resource_type: 'access_application' | 'access_group' | 'access_service_token' | 'account' | 'account_ruleset' | 'ai_gateway' | 'ai_search_instance' | 'ai_search_namespace' | 'alerting_policy' | 'alerting_webhook' | 'cloudflared_tunnel' | 'cws_deployment' | 'cws_policy' | 'cws_policy_set' | 'cws_workload' | 'd1_database' | 'device' | 'durable_object_namespace' | 'gateway_list' | 'gateway_rule' | 'image' | 'infrastructure_target' | 'kv_namespace' | 'load_balancer_monitor' | 'load_balancer_pool' | 'namespace_worker' | 'pages_project' | 'queue' | 'r2_bucket' | 'resource_share' | 'stream_live_input' | 'stream_video' | 'vectorize_index' | 'worker';
+};
+
+/**
+ * @description Request body schema for setting tags on zone-level resources with no extra requirements.
+ */
+export type ResourceTaggingSetTagsRequestZoneLevelBase = ResourceTaggingDeleteTagsRequestZoneLevelBase & {
+  /**
+   * @description Contains key-value pairs of tags. Keys may contain at most 256 characters. Values may contain at most 1024 characters and may be empty for key-only tags.
+   * @example {"environment":"production","team":"engineering"}
+   * @type object | undefined
+   */
+  tags?: ResourceTaggingTags;
+};
+
+/**
+ * @description Request body schema for setting tags on access_application_policy resources.
+ */
+export type ResourceTaggingSetTagsRequestZoneLevelAccessApplicationPolicy = ResourceTaggingDeleteTagsRequestZoneLevelAccessApplicationPolicy & {
+  /**
+   * @description Contains key-value pairs of tags. Keys may contain at most 256 characters. Values may contain at most 1024 characters and may be empty for key-only tags.
+   * @example {"environment":"production","team":"engineering"}
+   * @type object | undefined
+   */
+  tags?: ResourceTaggingTags;
+};
+
+/**
+ * @description Request body schema for setting tags on zone-level resources.
+ */
+export type ResourceTaggingSetTagsRequestZoneLevel = ResourceTaggingSetTagsRequestZoneLevelBase & {
+  resource_type: 'api_gateway_operation' | 'custom_certificate' | 'custom_hostname' | 'dns_record' | 'healthcheck' | 'load_balancer' | 'managed_client_certificate' | 'worker_route' | 'zone' | 'zone_ruleset';
+} | ResourceTaggingSetTagsRequestZoneLevelAccessApplicationPolicy & {
+  resource_type: 'access_application_policy';
 };
 
 /**
@@ -1325,6 +1425,1407 @@ export type ResourceTaggingTaggedResourceResponseSingle = ResourceTaggingApiResp
   result?: ResourceTaggingTaggedResourceObject;
 };
 
+export const resourceTaggingZoneResourceType = {
+  access_application_policy: 'access_application_policy',
+  api_gateway_operation: 'api_gateway_operation',
+  custom_certificate: 'custom_certificate',
+  custom_hostname: 'custom_hostname',
+  dns_record: 'dns_record',
+  healthcheck: 'healthcheck',
+  load_balancer: 'load_balancer',
+  managed_client_certificate: 'managed_client_certificate',
+  worker_route: 'worker_route',
+  zone: 'zone',
+  zone_ruleset: 'zone_ruleset',
+} as const;
+
+export type ResourceTaggingZoneResourceTypeKey = (typeof resourceTaggingZoneResourceType)[keyof typeof resourceTaggingZoneResourceType];
+
+/**
+ * @example []
+ * @type array
+ */
+export type WorkersMessages = {
+  /**
+   * @minimum 1000
+   * @type integer
+   */
+  code: number;
+  documentation_url?: string;
+  message: string;
+  source?: {
+    pointer?: string;
+  };
+}[];
+
+export type WorkersApiResponseCommonFailure = {
+  /**
+   * @example [{"code":7003,"message":"No route for the URI"}]
+   * @type array
+   */
+  errors: WorkersMessages;
+  /**
+   * @example []
+   * @type array
+   */
+  messages: WorkersMessages;
+  result: null;
+  /**
+   * @description Whether the API call was successful.
+   * @example false
+   * @type boolean
+   */
+  success: false;
+};
+
+/**
+ * @description Global CacheW configuration for the Worker. When caching is on,
+ * the platform provisions a `cloudflare.app` zone for the Worker.
+ * A `type: worker` entry in the `exports` map can override this
+ * value for a single entrypoint.
+ *
+ * @type object
+ */
+export type WorkersCacheOptions = {
+  /**
+   * @description Whether cached responses are shared across Worker version
+   * uploads. This is independent of `enabled`. It can stay true
+   * while caching is off, so the preference survives turning
+   * caching off and back on.
+   *
+   * @default false
+   * @example true
+   * @type boolean | undefined
+   */
+  cross_version_cache?: boolean;
+  /**
+   * @description Whether caching is enabled for this Worker.
+   * @default false
+   * @example true
+   * @type boolean
+   */
+  enabled: boolean;
+};
+
+/**
+ * @description Date indicating targeted support in the Workers runtime. Backwards incompatible fixes to the runtime following this date will not affect this Worker.
+ * @example 2021-01-01T00:00:00Z
+ * @type string
+ */
+export type WorkersCompatibilityDate = string;
+
+/**
+ * @description Flag that enables or disables a specific feature in the Workers runtime.
+ * @example nodejs_compat
+ * @type string
+ */
+export type WorkersCompatibilityFlag = string;
+
+/**
+ * @description Flags that enable or disable certain features in the Workers runtime. Used to enable upcoming features or opt in or out of specific changes not included in a `compatibility_date`.
+ * @default []
+ * @example ["nodejs_compat"]
+ * @type array
+ */
+export type WorkersCompatibilityFlags = WorkersCompatibilityFlag[];
+
+/**
+ * @description CacheW configuration for a single `type: worker` entrypoint.
+ * When present it overrides the Worker's global
+ * `cache_options.enabled` for that entrypoint, so a Worker can turn
+ * caching on globally and opt one entrypoint out, or the reverse.
+ *
+ * @type object
+ */
+export type WorkersEntrypointCacheOptions = {
+  /**
+   * @description Whether caching is enabled for this entrypoint.
+   * @example true
+   * @type boolean
+   */
+  enabled: boolean;
+};
+
+/**
+ * @description A named Worker entrypoint export (`type: worker`). Worker
+ * entrypoints are always live (`state: created`) and carry no
+ * storage or lifecycle fields. The optional `cache` block overrides
+ * the Worker's global `cache_options.enabled` for this entrypoint.
+ *
+ * @type object
+ */
+export type WorkersWorkerExport = {
+  /**
+   * @description Cache override for this entrypoint. Overrides the Worker's
+   * global `cache_options.enabled` for this entrypoint only.
+   *
+   * @type object | undefined
+   */
+  cache?: WorkersEntrypointCacheOptions;
+  /**
+   * @description Live export. May be omitted; defaults to `created`.
+   * @default 'created'
+   * @type string | undefined
+   */
+  state?: 'created';
+  /**
+   * @description Marks this entry as a Worker entrypoint export.
+   * @type string
+   */
+  type: 'worker';
+};
+
+export const workersExportStorage = {
+  sqlite: 'sqlite',
+  'legacy-kv': 'legacy-kv',
+} as const;
+
+export type WorkersExportStorageKey = (typeof workersExportStorage)[keyof typeof workersExportStorage];
+
+/**
+ * @description A live Durable Object export (`state: created`, the default). The
+ * platform auto-provisions the namespace on first deploy, matches it
+ * on subsequent deploys, and never mutates or deletes it as a side
+ * effect of a code-only change. `storage` is required; `renamed_to`,
+ * `transferred_to` and `transfer_from` are not allowed on a live
+ * entry.
+ *
+ * @type object
+ */
+export type WorkersDurableObjectExport = {
+  /**
+   * @description Name of the container (declared in the upload's
+   * `metadata.containers`) that backs this Durable Object. When
+   * set, the namespace is container-enabled. Valid only on live
+   * entries.
+   *
+   * @maxLength 128
+   * @example my-container
+   * @type string | undefined
+   */
+  container?: string;
+  /**
+   * @description Live export. May be omitted; defaults to `created`.
+   * @default 'created'
+   * @type string | undefined
+   */
+  state?: 'created';
+  /**
+   * @description Durable Object storage backend. `sqlite` is the recommended (and
+   * only) backend for new namespaces. `legacy-kv` is accepted only for
+   * a class whose namespace already exists as KV-backed; the `exports`
+   * flow never provisions a new `legacy-kv` namespace.
+   *
+   * @type string
+   */
+  storage: WorkersExportStorageKey;
+  /**
+   * @description Marks this entry as a Durable Object export.
+   * @type string
+   */
+  type: 'durable-object';
+};
+
+/**
+ * @description A `deleted` tombstone: retires the provisioned namespace for this
+ * class and all of its data. The class must be absent from the
+ * uploaded code and no other Worker in the account may bind to the
+ * namespace, otherwise the deploy is rejected. No other fields are
+ * allowed. Deletion is irreversible.
+ *
+ * @type object
+ */
+export type WorkersDurableObjectDeletedExport = {
+  /**
+   * @description Tombstone that deletes the namespace.
+   * @type string
+   */
+  state: 'deleted';
+  /**
+   * @description Marks this entry as a Durable Object export.
+   * @type string
+   */
+  type: 'durable-object';
+};
+
+/**
+ * @description A `renamed` tombstone: rewrites the provisioned namespace's class
+ * name from this map key to `renamed_to`. The source class may stay
+ * in code during the rollout window (an info notice is emitted).
+ * `storage`, `transferred_to` and `transfer_from` are not allowed.
+ *
+ * @type object
+ */
+export type WorkersDurableObjectRenamedExport = {
+  /**
+   * @description The destination class name. Must differ from the source class
+   * (the map key) and must be declared as a live (`created`) entry
+   * in the same `exports` map. Write-only: never present in GET
+   * responses.
+   *
+   * @maxLength 128
+   * @example NewName
+   * @type string
+   */
+  renamed_to: string;
+  /**
+   * @description Tombstone that renames the namespace's class.
+   * @type string
+   */
+  state: 'renamed';
+  /**
+   * @description Marks this entry as a Durable Object export.
+   * @type string
+   */
+  type: 'durable-object';
+};
+
+/**
+ * @description A `transferred` tombstone (source side of a two-phase transfer):
+ * hands ownership of the provisioned namespace to another script in
+ * the same account, named by `transferred_to`. The target must have
+ * already deployed a matching `expecting-transfer` entry. The source
+ * class may stay in code during the rollout window (an info notice
+ * is emitted). `storage`, `renamed_to` and `transfer_from` are not
+ * allowed.
+ *
+ * @type object
+ */
+export type WorkersDurableObjectTransferredExport = {
+  /**
+   * @description Tombstone that transfers the namespace to another script.
+   * @type string
+   */
+  state: 'transferred';
+  /**
+   * @description The destination script name. Must be in the same account and
+   * the same dispatch-namespace context (or both non-dispatch).
+   * Cross-dispatch-namespace transfers are rejected. Write-only:
+   * never present in GET responses.
+   *
+   * @maxLength 128
+   * @example target-worker
+   * @type string
+   */
+  transferred_to: string;
+  /**
+   * @description Marks this entry as a Durable Object export.
+   * @type string
+   */
+  type: 'durable-object';
+};
+
+/**
+ * @description The target side of a two-phase transfer (`state:
+ * expecting-transfer`). Declares that this script expects to receive
+ * a namespace for this class from the `transfer_from` script. This
+ * is a live entry, not a tombstone: bindings resolve through the
+ * source's namespace until the source commits with a `transferred`
+ * tombstone. `storage` and `transfer_from` are required; `renamed_to`
+ * and `transferred_to` are not allowed.
+ *
+ * @type object
+ */
+export type WorkersDurableObjectExpectingTransferExport = {
+  /**
+   * @description Name of the container (declared in the upload's
+   * `metadata.containers`) that backs this Durable Object once the
+   * transfer settles. Valid only on live entries.
+   *
+   * @maxLength 128
+   * @example my-container
+   * @type string | undefined
+   */
+  container?: string;
+  /**
+   * @description Target side of a two-phase transfer.
+   * @type string
+   */
+  state: 'expecting-transfer';
+  /**
+   * @description Durable Object storage backend. `sqlite` is the recommended (and
+   * only) backend for new namespaces. `legacy-kv` is accepted only for
+   * a class whose namespace already exists as KV-backed; the `exports`
+   * flow never provisions a new `legacy-kv` namespace.
+   *
+   * @type string
+   */
+  storage: WorkersExportStorageKey;
+  /**
+   * @description The source script name to receive the namespace from. Must be
+   * in the same account and dispatch-namespace context. Present on
+   * reads for `expecting-transfer` entries.
+   *
+   * @maxLength 128
+   * @example source-worker
+   * @type string
+   */
+  transfer_from: string;
+  /**
+   * @description Marks this entry as a Durable Object export.
+   * @type string
+   */
+  type: 'durable-object';
+};
+
+/**
+ * @description Any Durable Object export entry (`type: durable-object`), across
+ * all lifecycle states. The optional `state` field selects the
+ * variant (default `created`); the tombstone states (`deleted`,
+ * `renamed`, `transferred`) and the live transfer target
+ * (`expecting-transfer`) are the alternatives. The server validates
+ * the exact per-state field combinations; fields not listed for a
+ * variant are rejected.
+ *
+ */
+export type WorkersDurableObjectExportVariants = WorkersDurableObjectExport | WorkersDurableObjectDeletedExport | WorkersDurableObjectRenamedExport | WorkersDurableObjectTransferredExport | WorkersDurableObjectExpectingTransferExport;
+
+/**
+ * @description A single entry in the `exports` map, keyed by export name (a
+ * `WorkerEntrypoint` class name, a Durable Object class name, or
+ * `default` for the Worker's default export). The `type`
+ * discriminator selects the top-level shape: `worker` entrypoint
+ * entries may carry `cache` configuration, while `durable-object`
+ * entries are further refined by the optional `state` field
+ * (default `created`). Tombstone states (`deleted`, `renamed`,
+ * `transferred`) express destructive lifecycle operations
+ * declaratively; `expecting-transfer` is the live target side of a
+ * transfer. The server validates the exact per-(type, state) field
+ * combinations; fields not listed for a variant are rejected.
+ *
+ */
+export type WorkersExportConfig = WorkersWorkerExport & {
+  type: 'worker';
+} | WorkersDurableObjectExportVariants & {
+  type: 'durable-object';
+};
+
+/**
+ * @description Declarative exports for the Worker, keyed by export name. Worker
+ * entrypoint entries (`type: worker`) carry cache configuration for
+ * that entrypoint. Durable Object entries (`type: durable-object`)
+ * are also configured here and drive namespace reconciliation. At
+ * most 100 entries; class names are at most 128 characters.
+ *
+ * @example {"Admin":{"cache":{"enabled":true},"type":"worker"},"Counter":{"storage":"sqlite","type":"durable-object"},"OldCounter":{"renamed_to":"Counter","state":"renamed","type":"durable-object"},"default":{"cache":{"enabled":false},"type":"worker"}}
+ * @type object
+ */
+export type WorkersExportsConfigMap = {
+  [key: string]: WorkersExportConfig;
+};
+
+/**
+ * @description A target to run your Worker near.
+ */
+export type WorkersPlacementTarget = {
+  /**
+   * @description Cloud region in format 'provider:region'.
+   * @example aws:us-east-1
+   * @type string
+   */
+  region: string;
+} | {
+  /**
+   * @description HTTP hostname for targeted placement.
+   * @example api.example.com
+   * @type string
+   */
+  hostname: string;
+} | {
+  /**
+   * @description TCP host:port for targeted placement.
+   * @example db.example.com:5432
+   * @type string
+   */
+  host: string;
+};
+
+export type WorkersApiResponseCommon = {
+  /**
+   * @example []
+   * @type array
+   */
+  errors: WorkersMessages;
+  /**
+   * @example []
+   * @type array
+   */
+  messages: WorkersMessages;
+  /**
+   * @description Whether the API call was successful.
+   * @example true
+   * @type boolean
+   */
+  success: true;
+};
+
+/**
+ * @description When the script was created.
+ *
+ * Format: `date-time`
+ * @example 2017-01-01T00:00:00Z
+ * @type string
+ */
+export type WorkersCreatedOn = string;
+
+/**
+ * @description Hashed script content, can be used in a If-None-Match header when updating.
+ * @example ea95132c15732412d22c1476fa83f27a
+ * @type string
+ */
+export type WorkersEtag = string;
+
+/**
+ * @description Whether a Worker contains assets.
+ * @example false
+ * @type boolean
+ */
+export type WorkersHasAssets = boolean;
+
+/**
+ * @description Whether a Worker contains modules.
+ * @example false
+ * @type boolean
+ */
+export type WorkersHasModules = boolean;
+
+/**
+ * @description Identifier.
+ * @maxLength 32
+ * @example 023e105f4ecef8ad9ca31a8372d0c353
+ * @type string
+ */
+export type WorkersIdentifier = string;
+
+/**
+ * @description Whether Logpush is turned on for the Worker.
+ * @default false
+ * @example false
+ * @type boolean
+ */
+export type WorkersLogpush = boolean;
+
+/**
+ * @description When the script was last modified.
+ *
+ * Format: `date-time`
+ * @example 2017-01-01T00:00:00Z
+ * @type string
+ */
+export type WorkersModifiedOn = string;
+
+export const workersObservability2TracesPropagationPolicyEnum = {
+  authenticated: 'authenticated',
+  accept: 'accept',
+} as const;
+
+export type WorkersObservability2TracesPropagationPolicyEnumKey = (typeof workersObservability2TracesPropagationPolicyEnum)[keyof typeof workersObservability2TracesPropagationPolicyEnum];
+
+/**
+ * @description Observability settings for the Worker.
+ * @type object
+ */
+export type WorkersObservability2 = {
+  /**
+   * @description Whether observability is enabled for the Worker.
+   * @example true
+   * @type boolean
+   */
+  enabled: boolean;
+  /**
+   * @description The sampling rate for incoming requests. From 0 to 1 (1 = 100%, 0.1 = 10%). Default is 1.
+   * @example 0.1
+   * @type number | undefined
+   */
+  head_sampling_rate?: number | null;
+  /**
+   * @description Real-time Issues settings for the Worker.
+   * @type object | undefined
+   */
+  issues?: {
+    /**
+     * @description Whether real-time Issues are enabled for the Worker.
+     * @example true
+     * @type boolean | undefined
+     */
+    enabled?: boolean;
+  } | null;
+  /**
+   * @description Log settings for the Worker.
+   * @type object | undefined
+   */
+  logs?: {
+    /**
+     * @description A list of destinations where logs will be exported to.
+     * @example ["cloudflare"]
+     * @type array | undefined
+     */
+    destinations?: string[];
+    /**
+     * @description Whether logs are enabled for the Worker.
+     * @example true
+     * @type boolean
+     */
+    enabled: boolean;
+    /**
+     * @description The sampling rate for logs. From 0 to 1 (1 = 100%, 0.1 = 10%). Default is 1.
+     * @example 0.1
+     * @type number | undefined
+     */
+    head_sampling_rate?: number | null;
+    /**
+     * @description Whether [invocation logs](https://developers.cloudflare.com/workers/observability/logs/workers-logs/#invocation-logs) are enabled for the Worker.
+     * @example true
+     * @type boolean
+     */
+    invocation_logs: boolean;
+    /**
+     * @description Whether log persistence is enabled for the Worker.
+     * @default true
+     * @example true
+     * @type boolean | undefined
+     */
+    persist?: boolean;
+  } | null;
+  /**
+   * @description Whether query strings are removed from request URLs in logs and traces.
+   * @default false
+   * @example false
+   * @type boolean | undefined
+   */
+  redact_query_string?: boolean;
+  /**
+   * @description Trace settings for the Worker.
+   * @type object | undefined
+   */
+  traces?: {
+    /**
+     * @description A list of destinations where traces will be exported to.
+     * @example ["cloudflare"]
+     * @type array | undefined
+     */
+    destinations?: string[];
+    /**
+     * @description Whether traces are enabled for the Worker.
+     * @example true
+     * @type boolean | undefined
+     */
+    enabled?: boolean;
+    /**
+     * @description The sampling rate for traces. From 0 to 1 (1 = 100%, 0.1 = 10%). Default is 1.
+     * @example 0.1
+     * @type number | undefined
+     */
+    head_sampling_rate?: number | null;
+    /**
+     * @description Whether trace persistence is enabled for the Worker.
+     * @default true
+     * @example true
+     * @type boolean | undefined
+     */
+    persist?: boolean;
+    /**
+     * @description Controls how inbound trace context (traceparent/tracestate) headers on incoming requests are handled. "authenticated" honors inbound trace context only when accompanied by a valid trace auth token. "accept" unconditionally accepts inbound trace context. Requires the trace propagation feature to be enabled. Returns null when the trace propagation feature is not enabled for the account.
+     * @type string | undefined
+     */
+    propagation_policy?: WorkersObservability2TracesPropagationPolicyEnumKey | null;
+  } | null;
+};
+
+export const workersPlacementStatus = {
+  SUCCESS: 'SUCCESS',
+  UNSUPPORTED_APPLICATION: 'UNSUPPORTED_APPLICATION',
+  INSUFFICIENT_INVOCATIONS: 'INSUFFICIENT_INVOCATIONS',
+} as const;
+
+export type WorkersPlacementStatusKey = (typeof workersPlacementStatus)[keyof typeof workersPlacementStatus];
+
+/**
+ * @description Configuration for [Smart Placement](https://developers.cloudflare.com/workers/configuration/smart-placement). Specify mode='smart' for Smart Placement, or one of region/hostname/host.
+ */
+export type WorkersPlacementInfo = ({
+  /**
+   * @description Enables [Smart Placement](https://developers.cloudflare.com/workers/configuration/smart-placement).
+   * @type string
+   */
+  mode: 'smart';
+} | {
+  /**
+   * @description Cloud region for targeted placement in format 'provider:region'.
+   * @example aws:us-east-1
+   * @type string
+   */
+  region: string;
+} | {
+  /**
+   * @description HTTP hostname for targeted placement.
+   * @example api.example.com
+   * @type string
+   */
+  hostname: string;
+} | {
+  /**
+   * @description TCP host and port for targeted placement.
+   * @example db.example.com:5432
+   * @type string
+   */
+  host: string;
+} | {
+  /**
+   * @description Targeted placement mode.
+   * @type string
+   */
+  mode: 'targeted';
+  /**
+   * @description Cloud region for targeted placement in format 'provider:region'.
+   * @example aws:us-east-1
+   * @type string
+   */
+  region: string;
+} | {
+  /**
+   * @description HTTP hostname for targeted placement.
+   * @example api.example.com
+   * @type string
+   */
+  hostname: string;
+  /**
+   * @description Targeted placement mode.
+   * @type string
+   */
+  mode: 'targeted';
+} | {
+  /**
+   * @description TCP host and port for targeted placement.
+   * @example db.example.com:5432
+   * @type string
+   */
+  host: string;
+  /**
+   * @description Targeted placement mode.
+   * @type string
+   */
+  mode: 'targeted';
+} | {
+  /**
+   * @description Targeted placement mode.
+   * @type string
+   */
+  mode: 'targeted';
+  /**
+   * @description Array of placement targets (currently limited to single target).
+   * @type array
+   */
+  target: WorkersPlacementTarget[];
+}) & {
+  /**
+   * @description The last time the script was analyzed for [Smart Placement](https://developers.cloudflare.com/workers/configuration/smart-placement).
+   *
+   * Format: `date-time`
+   * @example 2025-01-01T00:00:00Z
+   * @type string | undefined
+   */
+  readonly last_analyzed_at?: string;
+  /**
+   * @description Status of [Smart Placement](https://developers.cloudflare.com/workers/configuration/smart-placement).
+   * @type string | undefined
+   */
+  readonly status?: WorkersPlacementStatusKey;
+};
+
+/**
+ * @description A reference to a script that will consume logs from the attached Worker.
+ * @type object
+ */
+export type WorkersTailConsumersScript = {
+  /**
+   * @description Optional environment if the Worker utilizes one.
+   * @example production
+   * @type string | undefined
+   */
+  environment?: string;
+  /**
+   * @description Optional dispatch namespace the script belongs to.
+   * @example my-namespace
+   * @type string | undefined
+   */
+  namespace?: string;
+  /**
+   * @description Name of Worker that is to be the consumer.
+   * @example my-log-consumer
+   * @type string
+   */
+  service: string;
+};
+
+/**
+ * @description List of Workers that will consume logs from the attached Worker.
+ * @type array
+ */
+export type WorkersTailConsumers = WorkersTailConsumersScript[] | null;
+
+export const workersUsageModel = {
+  standard: 'standard',
+  bundled: 'bundled',
+  unbound: 'unbound',
+} as const;
+
+export type WorkersUsageModelKey = (typeof workersUsageModel)[keyof typeof workersUsageModel];
+
+/**
+ * @maxLength 1024
+ * @pattern ^[^,&]*$
+ * @example my-tag
+ * @type string
+ */
+export type WorkersTag = string;
+
+/**
+ * @description Tags associated with the Worker.
+ * @example ["my-team","my-public-api"]
+ * @type array
+ */
+export type WorkersTags = WorkersTag[] | null;
+
+export const workersPlacementMode = {
+  smart: 'smart',
+  targeted: 'targeted',
+} as const;
+
+export type WorkersPlacementModeKey = (typeof workersPlacementMode)[keyof typeof workersPlacementMode];
+
+export type WorkersScriptResponse = {
+  /**
+   * @description Global CacheW configuration for the Worker. When caching is on,
+   * the platform provisions a `cloudflare.app` zone for the Worker.
+   * A `type: worker` entry in the `exports` map can override this
+   * value for a single entrypoint.
+   *
+   * @type object | undefined
+   */
+  cache_options?: WorkersCacheOptions;
+  /**
+   * @description Date indicating targeted support in the Workers runtime. Backwards incompatible fixes to the runtime following this date will not affect this Worker.
+   * @example 2021-01-01T00:00:00Z
+   * @type string | undefined
+   */
+  compatibility_date?: WorkersCompatibilityDate;
+  /**
+   * @description Flags that enable or disable certain features in the Workers runtime. Used to enable upcoming features or opt in or out of specific changes not included in a `compatibility_date`.
+   * @default []
+   * @example ["nodejs_compat"]
+   * @type array | undefined
+   */
+  compatibility_flags?: WorkersCompatibilityFlags;
+  /**
+   * @description When the script was created.
+   *
+   * Format: `date-time`
+   * @example 2017-01-01T00:00:00Z
+   * @type string | undefined
+   */
+  readonly created_on?: WorkersCreatedOn;
+  /**
+   * @description Hashed script content, can be used in a If-None-Match header when updating.
+   * @example ea95132c15732412d22c1476fa83f27a
+   * @type string | undefined
+   */
+  readonly etag?: WorkersEtag;
+  /**
+   * @description Declarative exports for the Worker's most recent version,
+   * including Durable Object classes (with their `storage`
+   * backend) and named Worker entrypoints. Tombstoned lifecycle
+   * entries are omitted, so only live exports (`created` and
+   * `expecting-transfer`) are returned.
+   *
+   * @example {"Admin":{"cache":{"enabled":true},"type":"worker"},"Counter":{"storage":"sqlite","type":"durable-object"},"OldCounter":{"renamed_to":"Counter","state":"renamed","type":"durable-object"},"default":{"cache":{"enabled":false},"type":"worker"}}
+   * @type object | undefined
+   */
+  readonly exports?: WorkersExportsConfigMap;
+  /**
+   * @description The names of handlers exported as part of the default export.
+   * @example ["fetch","scheduled"]
+   * @type array | undefined
+   */
+  handlers?: string[];
+  /**
+   * @description Whether a Worker contains assets.
+   * @example false
+   * @type boolean | undefined
+   */
+  has_assets?: WorkersHasAssets;
+  /**
+   * @description Whether a Worker contains modules.
+   * @example false
+   * @type boolean | undefined
+   */
+  has_modules?: WorkersHasModules;
+  /**
+   * @description The name used to identify the script.
+   * @example my-workers-script
+   * @type string | undefined
+   */
+  readonly id?: string;
+  /**
+   * @description The client most recently used to deploy this Worker.
+   * @example wrangler
+   * @type string | undefined
+   */
+  last_deployed_from?: string;
+  /**
+   * @description Whether Logpush is turned on for the Worker.
+   * @default false
+   * @example false
+   * @type boolean | undefined
+   */
+  logpush?: WorkersLogpush;
+  /**
+   * @description The tag of the Durable Object migration that was most recently applied for this Worker.
+   * @example v1
+   * @type string | undefined
+   */
+  migration_tag?: string;
+  /**
+   * @description When the script was last modified.
+   *
+   * Format: `date-time`
+   * @example 2017-01-01T00:00:00Z
+   * @type string | undefined
+   */
+  readonly modified_on?: WorkersModifiedOn;
+  /**
+   * @description Named exports, such as Durable Object class implementations and named entrypoints.
+   * @type array | undefined
+   */
+  named_handlers?: {
+    /**
+     * @description The names of handlers exported as part of the named export.
+     * @example ["class"]
+     * @type array | undefined
+     */
+    handlers?: string[];
+    /**
+     * @description The name of the export.
+     * @example MyDurableObject
+     * @type string | undefined
+     */
+    name?: string;
+  }[];
+  /**
+   * @description Observability settings for the Worker.
+   * @type object | undefined
+   */
+  observability?: WorkersObservability2;
+  /**
+   * @description Configuration for [Smart Placement](https://developers.cloudflare.com/workers/configuration/smart-placement). Specify mode='smart' for Smart Placement, or one of region/hostname/host.
+   */
+  placement?: WorkersPlacementInfo;
+  placement_mode?: WorkersPlacementModeKey & string;
+  placement_status?: WorkersPlacementStatusKey & string;
+  /**
+   * @description The immutable ID of the script.
+   * @example e8f70fdbc8b1fb0b8ddb1af166186758
+   * @type string | undefined
+   */
+  readonly tag?: string;
+  /**
+   * @description Tags associated with the Worker.
+   * @example ["my-team","my-public-api"]
+   * @type array | undefined
+   */
+  tags?: WorkersTags | null;
+  /**
+   * @description List of Workers that will consume logs from the attached Worker.
+   * @type array | undefined
+   */
+  tail_consumers?: WorkersTailConsumers | null;
+  /**
+   * @description Usage model for the Worker invocations.
+   * @default 'standard'
+   * @example standard
+   * @type string | undefined
+   */
+  usage_model?: WorkersUsageModelKey;
+};
+
+export type WorkersRoute = {
+  /**
+   * @description Identifier.
+   * @maxLength 32
+   * @example 023e105f4ecef8ad9ca31a8372d0c353
+   * @type string
+   */
+  readonly id: WorkersIdentifier;
+  /**
+   * @description Pattern to match incoming requests against. [Learn more](https://developers.cloudflare.com/workers/configuration/routing/routes/#matching-behavior).
+   * @example example.com/*
+   * @type string
+   */
+  pattern: string;
+  /**
+   * @description Name of the script to run if the route matches.
+   * @example my-workers-script
+   * @type string | undefined
+   */
+  script?: string;
+};
+
+export type WorkersScriptResponseCollection = WorkersApiResponseCommon & {
+  result: (WorkersScriptResponse & {
+    /**
+     * @description Routes associated with the Worker.
+     * @type array | undefined
+     */
+    routes?: WorkersRoute[] | null;
+  })[];
+};
+
+export type WorkersSubdomain2 = {
+  /**
+   * @example my-subdomain
+   * @type string
+   */
+  subdomain: string;
+};
+
+/**
+ * @example []
+ * @type array
+ */
+export type ZonesMessages = {
+  /**
+   * @minimum 1000
+   * @type integer
+   */
+  code: number;
+  message: string;
+}[];
+
+export type ZonesApiResponseCommon = {
+  /**
+   * @example []
+   * @type array
+   */
+  errors: ZonesMessages;
+  /**
+   * @example []
+   * @type array
+   */
+  messages: ZonesMessages;
+  /**
+   * @description Whether the API call was successful.
+   * @example true
+   * @type boolean
+   */
+  success: boolean;
+};
+
+export type ZonesApiResponseCommonFailure = {
+  /**
+   * @example [{"code":7003,"message":"No route for the URI"}]
+   * @type array
+   */
+  errors: ZonesMessages;
+  /**
+   * @example []
+   * @type array
+   */
+  messages: ZonesMessages;
+  result: object | null;
+  /**
+   * @description Whether the API call was successful.
+   * @example false
+   * @type boolean
+   */
+  success: boolean;
+};
+
+/**
+ * @description Identifier
+ * @maxLength 32
+ * @example 023e105f4ecef8ad9ca31a8372d0c353
+ * @type string
+ */
+export type ZonesIdentifier = string;
+
+/**
+ * @description Indicates whether the zone is only using Cloudflare DNS services. A
+ * true value means the zone will not receive security or performance
+ * benefits.
+ *
+ * @default false
+ * @type boolean
+ */
+export type ZonesPaused = boolean;
+
+export type ZonesResultInfo = {
+  /**
+   * @description Total number of results for the requested service.
+   * @example 1
+   * @type number | undefined
+   */
+  count?: number;
+  /**
+   * @description Current page within paginated list of results.
+   * @example 1
+   * @type number | undefined
+   */
+  page?: number;
+  /**
+   * @description Number of results per page of results.
+   * @example 20
+   * @type number | undefined
+   */
+  per_page?: number;
+  /**
+   * @description Total results available without any search parameters.
+   * @example 2000
+   * @type number | undefined
+   */
+  total_count?: number;
+  /**
+   * @description Total number of pages
+   * @example 100
+   * @type number | undefined
+   */
+  total_pages?: number;
+};
+
+export const zonesType = {
+  full: 'full',
+  partial: 'partial',
+  secondary: 'secondary',
+  internal: 'internal',
+} as const;
+
+export type ZonesTypeKey = (typeof zonesType)[keyof typeof zonesType];
+
+export const zonesZoneStatusEnum = {
+  initializing: 'initializing',
+  pending: 'pending',
+  active: 'active',
+  moved: 'moved',
+} as const;
+
+export type ZonesZoneStatusEnumKey = (typeof zonesZoneStatusEnum)[keyof typeof zonesZoneStatusEnum];
+
+export type ZonesZone = {
+  /**
+   * @description The account the zone belongs to.
+   * @type object
+   */
+  account: {
+    /**
+     * @description Identifier
+     * @maxLength 32
+     * @example 023e105f4ecef8ad9ca31a8372d0c353
+     * @type string | undefined
+     */
+    id?: string;
+    /**
+     * @description The name of the account.
+     * @example Example Account Name
+     * @type string | undefined
+     */
+    name?: string;
+  };
+  /**
+   * @description The last time proof of ownership was detected and the zone was made
+   * active.
+   *
+   * Format: `date-time`
+   * @example 2014-01-02T00:01:00.12345Z
+   * @type string
+   */
+  readonly activated_on: string | null;
+  /**
+   * @description Allows the customer to use a custom apex.
+   * *Tenants Only Configuration*.
+   * @example cdn.cloudflare.com
+   * @type string | undefined
+   */
+  cname_suffix?: string;
+  /**
+   * @description When the zone was created.
+   *
+   * Format: `date-time`
+   * @example 2014-01-01T05:20:00.12345Z
+   * @type string
+   */
+  readonly created_on: string;
+  /**
+   * @description The interval (in seconds) from when development mode expires
+   * (positive integer) or last expired (negative integer) for the
+   * domain. If development mode has never been enabled, this value is 0.
+   * @example 7200
+   * @type number
+   */
+  readonly development_mode: number;
+  /**
+   * @description Identifier
+   * @maxLength 32
+   * @example 023e105f4ecef8ad9ca31a8372d0c353
+   * @type string
+   */
+  id: string;
+  /**
+   * @description Metadata about the zone.
+   * @type object
+   */
+  meta: {
+    /**
+     * @description The zone is only configured for CDN.
+     * @example true
+     * @type boolean | undefined
+     */
+    cdn_only?: boolean;
+    /**
+     * @description Number of Custom Certificates the zone can have.
+     * @example 1
+     * @type integer | undefined
+     */
+    custom_certificate_quota?: number;
+    /**
+     * @description The zone is only configured for DNS.
+     * @example true
+     * @type boolean | undefined
+     */
+    dns_only?: boolean;
+    /**
+     * @description The zone is setup with Foundation DNS.
+     * @example true
+     * @type boolean | undefined
+     */
+    foundation_dns?: boolean;
+    /**
+     * @description Number of Page Rules a zone can have.
+     * @example 100
+     * @type integer | undefined
+     */
+    page_rule_quota?: number;
+    /**
+     * @description The zone has been flagged for phishing.
+     * @example false
+     * @type boolean | undefined
+     */
+    phishing_detected?: boolean;
+    /**
+     * @example 2
+     * @type integer | undefined
+     */
+    step?: number;
+  };
+  /**
+   * @description When the zone was last modified.
+   *
+   * Format: `date-time`
+   * @example 2014-01-01T05:20:00.12345Z
+   * @type string
+   */
+  readonly modified_on: string;
+  /**
+   * @description The domain name. Per [RFC 1035](https://datatracker.ietf.org/doc/html/rfc1035#section-2.3.4) the overall zone name can be up to 253 characters, with each segment ("label") not exceeding 63 characters.
+   * @maxLength 253
+   * @pattern ^([a-zA-Z0-9][\-a-zA-Z0-9]*\.)+[\-a-zA-Z0-9]{2,20}$
+   * @example example.com
+   * @type string
+   */
+  name: string;
+  /**
+   * @description The name servers Cloudflare assigns to a zone.
+   * @example ["bob.ns.cloudflare.com","lola.ns.cloudflare.com"]
+   * @type array
+   */
+  readonly name_servers: string[];
+  /**
+   * @description DNS host at the time of switching to Cloudflare.
+   * @maxLength 50
+   * @example NameCheap
+   * @type string
+   */
+  readonly original_dnshost: string | null;
+  /**
+   * @description Original name servers before moving to Cloudflare.
+   * @example ["ns1.originaldnshost.com","ns2.originaldnshost.com"]
+   * @type array
+   */
+  readonly original_name_servers: string[] | null;
+  /**
+   * @description Registrar for the domain at the time of switching to Cloudflare.
+   * @example GoDaddy
+   * @type string
+   */
+  readonly original_registrar: string | null;
+  /**
+   * @description The owner of the zone.
+   * @type object
+   */
+  owner: {
+    /**
+     * @description Identifier
+     * @maxLength 32
+     * @example 023e105f4ecef8ad9ca31a8372d0c353
+     * @type string | undefined
+     */
+    id?: ZonesIdentifier;
+    /**
+     * @description Name of the owner.
+     * @example Example Org
+     * @type string | undefined
+     */
+    name?: string;
+    /**
+     * @description The type of owner.
+     * @example organization
+     * @type string | undefined
+     */
+    type?: string;
+  };
+  /**
+   * @description Indicates whether the zone is only using Cloudflare DNS services. A
+   * true value means the zone will not receive security or performance
+   * benefits.
+   *
+   * @default false
+   * @type boolean | undefined
+   */
+  paused?: ZonesPaused;
+  /**
+   * @description Legacy permissions based on legacy user membership information.
+   * @deprecated
+   * @type array | undefined
+   */
+  permissions?: string[];
+  /**
+   * @description A Zones subscription information.
+   * @deprecated
+   * @type object
+   */
+  plan: {
+    /**
+     * @description States if the subscription can be activated.
+     * @example false
+     * @type boolean | undefined
+     */
+    can_subscribe?: boolean;
+    /**
+     * @description The denomination of the customer.
+     * @example USD
+     * @type string | undefined
+     */
+    currency?: string;
+    /**
+     * @description If this Zone is managed by another company.
+     * @example false
+     * @type boolean | undefined
+     */
+    externally_managed?: boolean;
+    /**
+     * @description How often the customer is billed.
+     * @example monthly
+     * @type string | undefined
+     */
+    frequency?: string;
+    /**
+     * @description Identifier
+     * @maxLength 32
+     * @example 023e105f4ecef8ad9ca31a8372d0c353
+     * @type string | undefined
+     */
+    id?: ZonesIdentifier;
+    /**
+     * @description States if the subscription active.
+     * @example false
+     * @type boolean | undefined
+     */
+    is_subscribed?: boolean;
+    /**
+     * @description If the legacy discount applies to this Zone.
+     * @example false
+     * @type boolean | undefined
+     */
+    legacy_discount?: boolean;
+    /**
+     * @description The legacy name of the plan.
+     * @example free
+     * @type string | undefined
+     */
+    legacy_id?: string;
+    /**
+     * @description Name of the owner.
+     * @example Example Org
+     * @type string | undefined
+     */
+    name?: string;
+    /**
+     * @description How much the customer is paying.
+     * @example 10.99
+     * @type number | undefined
+     */
+    price?: number;
+  };
+  /**
+   * @description The zone status on Cloudflare.
+   * @example active
+   * @type string | undefined
+   */
+  readonly status?: ZonesZoneStatusEnumKey;
+  /**
+   * @description The root organizational unit that this zone belongs to (such as a tenant or organization).
+   * @type object | undefined
+   */
+  tenant?: {
+    /**
+     * @description Identifier
+     * @maxLength 32
+     * @example 023e105f4ecef8ad9ca31a8372d0c353
+     * @type string | undefined
+     */
+    id?: ZonesIdentifier;
+    /**
+     * @description The name of the Tenant account.
+     * @example Example Account Name
+     * @type string | undefined
+     */
+    name?: string;
+  };
+  /**
+   * @description The immediate parent organizational unit that this zone belongs to (such as under a tenant or sub-organization).
+   * @type object | undefined
+   */
+  tenant_unit?: {
+    /**
+     * @description Identifier
+     * @maxLength 32
+     * @example 023e105f4ecef8ad9ca31a8372d0c353
+     * @type string | undefined
+     */
+    id?: ZonesIdentifier;
+  };
+  /**
+   * @description A full zone implies that DNS is hosted with Cloudflare. A partial zone is
+   * typically a partner-hosted zone or a CNAME setup.
+   *
+   * @default 'full'
+   * @example full
+   * @type string | undefined
+   */
+  type?: ZonesTypeKey;
+  /**
+   * @description An array of domains used for custom name servers. This is only available for Business and Enterprise plans.
+   * @default []
+   * @example ["ns1.example.com","ns2.example.com"]
+   * @type array | undefined
+   */
+  vanity_name_servers?: string[];
+  /**
+   * @description Verification key for partial zone setup.
+   * @example 284344499-1084221259
+   * @type string | undefined
+   */
+  readonly verification_key?: string;
+};
+
 export type D1ListDatabasesPath = {
   /**
    * @description Account identifier tag.
@@ -1649,3 +3150,330 @@ export type TagsListResponses = {
  * @description Union of all possible responses
  */
 export type TagsListResponse = TagsListStatus200;
+
+export type WorkerScriptListWorkersPath = {
+  /**
+   * @description Identifier.
+   * @maxLength 32
+   * @example 023e105f4ecef8ad9ca31a8372d0c353
+   * @type string
+   */
+  account_id: WorkersIdentifier;
+};
+
+export type WorkerScriptListWorkersQuery = {
+  /**
+   * @description Filter scripts by tags. Format: comma-separated list of tag:allowed pairs where allowed is 'yes' or 'no'.
+   * @example production:yes,staging:no
+   * @type string | undefined
+   */
+  tags?: string;
+};
+
+export type WorkerScriptListWorkersStatus200 = WorkersScriptResponseCollection;
+
+export type WorkerScriptListWorkersStatus4XX = WorkersApiResponseCommonFailure;
+
+export type WorkerScriptListWorkersOptions = {
+  body?: never;
+  path: WorkerScriptListWorkersPath;
+  query?: WorkerScriptListWorkersQuery;
+  headers?: never;
+};
+
+export type WorkerScriptListWorkersResponses = {
+  '200': WorkerScriptListWorkersStatus200;
+  '4XX': WorkerScriptListWorkersStatus4XX;
+};
+
+/**
+ * @description Union of all possible responses
+ */
+export type WorkerScriptListWorkersResponse = WorkerScriptListWorkersStatus200;
+
+export type WorkerSubdomainGetSubdomainPath = {
+  /**
+   * @description Identifier.
+   * @maxLength 32
+   * @example 023e105f4ecef8ad9ca31a8372d0c353
+   * @type string
+   */
+  account_id: WorkersIdentifier;
+};
+
+export type WorkerSubdomainGetSubdomainStatus200 = WorkersApiResponseCommon & {
+  result: WorkersSubdomain2;
+};
+
+export type WorkerSubdomainGetSubdomainStatus4XX = WorkersApiResponseCommonFailure;
+
+export type WorkerSubdomainGetSubdomainOptions = {
+  body?: never;
+  path: WorkerSubdomainGetSubdomainPath;
+  query?: never;
+  headers?: never;
+};
+
+export type WorkerSubdomainGetSubdomainResponses = {
+  '200': WorkerSubdomainGetSubdomainStatus200;
+  '4XX': WorkerSubdomainGetSubdomainStatus4XX;
+};
+
+/**
+ * @description Union of all possible responses
+ */
+export type WorkerSubdomainGetSubdomainResponse = WorkerSubdomainGetSubdomainStatus200;
+
+export const zonesGetStatus = {
+  initializing: 'initializing',
+  pending: 'pending',
+  active: 'active',
+  moved: 'moved',
+} as const;
+
+export type ZonesGetStatusKey = (typeof zonesGetStatus)[keyof typeof zonesGetStatus];
+
+export const zonesGetTypeEnum = {
+  full: 'full',
+  partial: 'partial',
+  secondary: 'secondary',
+  internal: 'internal',
+} as const;
+
+export type ZonesGetTypeEnumKey = (typeof zonesGetTypeEnum)[keyof typeof zonesGetTypeEnum];
+
+export const zonesGetOrder = {
+  name: 'name',
+  status: 'status',
+  'account.id': 'account.id',
+  'account.name': 'account.name',
+  'plan.id': 'plan.id',
+} as const;
+
+export type ZonesGetOrderKey = (typeof zonesGetOrder)[keyof typeof zonesGetOrder];
+
+export const zonesGetDirection = {
+  asc: 'asc',
+  desc: 'desc',
+} as const;
+
+export type ZonesGetDirectionKey = (typeof zonesGetDirection)[keyof typeof zonesGetDirection];
+
+export const zonesGetMatch = {
+  any: 'any',
+  all: 'all',
+} as const;
+
+export type ZonesGetMatchKey = (typeof zonesGetMatch)[keyof typeof zonesGetMatch];
+
+export type ZonesGetQuery = {
+  /**
+   * @description A domain name. Optional filter operators can be provided to extend refine the search:
+   *   * `equal` (default)
+   *   * `not_equal`
+   *   * `starts_with`
+   *   * `ends_with`
+   *   * `contains`
+   *   * `starts_with_case_sensitive`
+   *   * `ends_with_case_sensitive`
+   *   * `contains_case_sensitive`
+   *
+   * @maxLength 253
+   * @type string | undefined
+   */
+  name?: string;
+  /**
+   * @description Specify a zone status to filter by.
+   * @type string | undefined
+   */
+  status?: ZonesGetStatusKey;
+  /**
+   * @description Zone types to filter by. Multiple types can be specified as a comma-separated list (e.g., ?type=full,partial,secondary). When this parameter is not provided, zones with type "internal" are excluded from the results.
+   * @type array | undefined
+   */
+  type?: ZonesGetTypeEnumKey[];
+  /**
+   * @description Filter by an account ID.
+   * @type string | undefined
+   */
+  'account.id'?: string;
+  /**
+   * @description An account Name. Optional filter operators can be provided to extend refine the search:
+   *   * `equal` (default)
+   *   * `not_equal`
+   *   * `starts_with`
+   *   * `ends_with`
+   *   * `contains`
+   *   * `starts_with_case_sensitive`
+   *   * `ends_with_case_sensitive`
+   *   * `contains_case_sensitive`
+   *
+   * @maxLength 253
+   * @type string | undefined
+   */
+  'account.name'?: string;
+  /**
+   * @description Page number of paginated results.
+   * @minimum 1
+   * @default 1
+   * @type number | undefined
+   */
+  page?: number;
+  /**
+   * @description Number of zones per page.
+   * @minimum 5
+   * @maximum 50
+   * @default 20
+   * @type number | undefined
+   */
+  per_page?: number;
+  /**
+   * @description Field to order zones by.
+   * @example status
+   * @type string | undefined
+   */
+  order?: ZonesGetOrderKey;
+  /**
+   * @description Direction to order zones.
+   * @example desc
+   * @type string | undefined
+   */
+  direction?: ZonesGetDirectionKey;
+  /**
+   * @description Whether to match all search requirements or at least one (any).
+   * @default 'all'
+   * @type string | undefined
+   */
+  match?: ZonesGetMatchKey;
+};
+
+export type ZonesGetStatus200 = ZonesApiResponseCommon & {
+  result_info?: ZonesResultInfo;
+} & {
+  result?: ZonesZone[];
+};
+
+export type ZonesGetStatus4XX = ZonesApiResponseCommonFailure;
+
+export type ZonesGetOptions = {
+  body?: never;
+  path?: never;
+  query?: ZonesGetQuery;
+  headers?: never;
+};
+
+export type ZonesGetResponses = {
+  '200': ZonesGetStatus200;
+  '4XX': ZonesGetStatus4XX;
+};
+
+/**
+ * @description Union of all possible responses
+ */
+export type ZonesGetResponse = ZonesGetStatus200;
+
+export type TagsZoneGetPath = {
+  /**
+   * @description Zone ID is required only for zone-level resources
+   */
+  zone_id: ResourceTaggingZoneId;
+};
+
+export type TagsZoneGetQuery = {
+  /**
+   * @description The ID of the resource to retrieve tags for.
+   * @example 023e105f4ecef8ad9ca31a8372d0c353
+   * @type string
+   */
+  resource_id: ResourceTaggingResourceId;
+  /**
+   * @description The type of the resource.
+   * @example zone
+   * @type string
+   */
+  resource_type: ResourceTaggingZoneResourceTypeKey;
+  /**
+   * @description Access application ID identifier. Required for access_application_policy resources.
+   *
+   * Format: `uuid`
+   * @example f174e90a-fafe-4643-bbbc-4a0ed4fc8415
+   * @type string | undefined
+   */
+  access_application_id?: ResourceTaggingAccessApplicationId;
+};
+
+export type TagsZoneGetStatus200 = ResourceTaggingTaggedResourceResponseSingle;
+
+export type TagsZoneGetStatus4XX = ResourceTaggingApiResponseCommonFailure;
+
+export type TagsZoneGetStatus5XX = ResourceTaggingApiResponseCommonFailure;
+
+export type TagsZoneGetOptions = {
+  body?: never;
+  path: TagsZoneGetPath;
+  query: TagsZoneGetQuery;
+  headers?: never;
+};
+
+export type TagsZoneGetResponses = {
+  '200': TagsZoneGetStatus200;
+  '4XX': TagsZoneGetStatus4XX;
+  '5XX': TagsZoneGetStatus5XX;
+};
+
+/**
+ * @description Union of all possible responses
+ */
+export type TagsZoneGetResponse = TagsZoneGetStatus200;
+
+export type TagsZoneSetPath = {
+  /**
+   * @description Zone ID is required only for zone-level resources
+   */
+  zone_id: ResourceTaggingZoneId;
+};
+
+export type TagsZoneSetHeaders = {
+  /**
+   * @description ETag value for optimistic concurrency control. When provided, the server will
+   * verify the current resource ETag matches before applying the write. Returns
+   * 412 Precondition Failed if the resource has been modified since the ETag was
+   * obtained. Omit this header for unconditional writes.
+   *
+   * @example "v1:RBNvo1WzZ4oRRq0W9-hkng"
+   * @type string | undefined
+   */
+  'If-Match'?: string;
+};
+
+export type TagsZoneSetStatus200 = ResourceTaggingTaggedResourceResponseSingle;
+
+export type TagsZoneSetStatus412 = ResourceTaggingApiResponseCommonFailure;
+
+export type TagsZoneSetStatus4XX = ResourceTaggingApiResponseCommonFailure;
+
+export type TagsZoneSetStatus5XX = ResourceTaggingApiResponseCommonFailure;
+
+/**
+ * @description Request body schema for setting tags on zone-level resources.
+ */
+export type TagsZoneSetBody = ResourceTaggingSetTagsRequestZoneLevel;
+
+export type TagsZoneSetOptions = {
+  body: TagsZoneSetBody;
+  path: TagsZoneSetPath;
+  query?: never;
+  headers?: TagsZoneSetHeaders;
+};
+
+export type TagsZoneSetResponses = {
+  '200': TagsZoneSetStatus200;
+  '412': TagsZoneSetStatus412;
+  '4XX': TagsZoneSetStatus4XX;
+  '5XX': TagsZoneSetStatus5XX;
+};
+
+/**
+ * @description Union of all possible responses
+ */
+export type TagsZoneSetResponse = TagsZoneSetStatus200;

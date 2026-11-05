@@ -10,8 +10,8 @@ import { type Run, spawnRun } from "../src/run.ts";
 import { acme, cleanUp, copy, danku, project } from "./project.ts";
 
 const DEPLOY_TS = `const db = new D1("db");
-new Worker("web", { app: "apps/web", compatibilityFlags: ["nodejs_als"], bindings: { DB: db } });
-new Worker("admin", { app: "apps/admin" });`;
+new Worker("web", { app: "apps/web", bindings: { DB: db } });
+new Worker("admin", { app: "apps/admin", domain: new Zone("acme.dev").sub("admin") });`;
 
 /** Two SvelteKit apps on the Cloudflare adapter, one as a dependency and one as a devDependency. */
 const files = {
@@ -68,9 +68,10 @@ test("writes each Worker's wrangler.jsonc and its types", async () => {
   "main": ".svelte-kit/cloudflare/_worker.js",
   "compatibility_date": "${compatibilityDate}",
   "compatibility_flags": [
-    "nodejs_compat",
-    "nodejs_als"
+    "nodejs_compat"
   ],
+  "workers_dev": true,
+  "preview_urls": false,
   "assets": {
     "binding": "ASSETS",
     "directory": ".svelte-kit/cloudflare"
@@ -84,9 +85,11 @@ test("writes each Worker's wrangler.jsonc and its types", async () => {
 }
 `,
   );
+  // A Worker on a domain is served there only.
   expect(await config(dir, "apps/admin")).toMatchObject({
     name: "acme-admin",
-    compatibility_flags: ["nodejs_compat"],
+    workers_dev: false,
+    routes: [{ pattern: "admin.acme.dev", custom_domain: true }],
     d1_databases: [],
   });
   expect(run.mock.calls).toEqual([

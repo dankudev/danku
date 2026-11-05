@@ -10,7 +10,7 @@ import type { Run } from "../src/run.ts";
 export const workspace = { "pnpm-workspace.yaml": "packages:\n  - apps/*\n" };
 export const named = (name?: string) => ({ "package.json": JSON.stringify({ name }) });
 export const deployTs = (body: string) => ({
-  "danku/deploy.ts": `import { D1, Worker } from "@dankudev/danku/deploy/cloudflare";\n${body}`,
+  "danku/deploy.ts": `import { D1, Worker, Zone } from "@dankudev/danku/deploy/cloudflare";\n${body}`,
 });
 /** A project named acme with this deploy.ts. */
 export const acme = (body: string) => ({ ...workspace, ...named("acme"), ...deployTs(body) });

@@ -14,6 +14,11 @@ const include = [
   "tags-get",
   "tags-set",
   "tags-list",
+  "tags-zone-get",
+  "tags-zone-set",
+  "worker-script-list-workers",
+  "worker-subdomain-get-subdomain",
+  "zones-get",
 ].map((id) => ({
   type: "operationId" as const,
   pattern: new RegExp(`^${id}$`),

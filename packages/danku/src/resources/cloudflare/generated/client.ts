@@ -4,7 +4,7 @@
 */
 
 import type { ClientConfig, ClientInstance, Options, Unwrappable, RequestResult } from './.kubb/client.ts'
-import type { D1ListDatabasesOptions, D1ListDatabasesResponses, D1CreateDatabaseOptions, D1CreateDatabaseResponses, TagsGetOptions, TagsGetResponses, TagsSetOptions, TagsSetResponses, TagsListOptions, TagsListResponses } from './types.ts'
+import type { D1ListDatabasesOptions, D1ListDatabasesResponses, D1CreateDatabaseOptions, D1CreateDatabaseResponses, TagsGetOptions, TagsGetResponses, TagsSetOptions, TagsSetResponses, TagsListOptions, TagsListResponses, WorkerScriptListWorkersOptions, WorkerScriptListWorkersResponses, WorkerSubdomainGetSubdomainOptions, WorkerSubdomainGetSubdomainResponses, ZonesGetOptions, ZonesGetResponses, TagsZoneGetOptions, TagsZoneGetResponses, TagsZoneSetOptions, TagsZoneSetResponses } from './types.ts'
 import { createClient, withUnwrap } from './.kubb/client.ts'
 
 export class CloudflareClient {
@@ -67,5 +67,61 @@ export class CloudflareClient {
     const { client: request = this.client, ...config } = options
 
     return withUnwrap(request({ method: 'GET', url: '/accounts/{account_id}/tags/resources', security: [{ type: 'apiKey', name: 'X-Auth-Email', in: 'header' }, { type: 'apiKey', name: 'X-Auth-Key', in: 'header' }], styles: { query: { type: { style: 'form', explode: true }, id: { style: 'form', explode: true }, tag: { explode: true } } }, ...config, throwOnError: config.throwOnError ?? true }) as Promise<RequestResult<TagsListResponses, ThrowOnError>>)
+  }
+
+/**
+   * @description Fetch a list of uploaded Worker scripts.
+   * @summary List Worker Scripts
+   * {@link /accounts/:account_id/workers/scripts}
+   */
+    public workerScriptListWorkers<ThrowOnError extends boolean = true>(options: Options<WorkerScriptListWorkersOptions, ThrowOnError>): Unwrappable<RequestResult<WorkerScriptListWorkersResponses, ThrowOnError>> {
+    const { client: request = this.client, ...config } = options
+
+    return withUnwrap(request({ method: 'GET', url: '/accounts/{account_id}/workers/scripts', security: [{ type: 'http', scheme: 'bearer' }, { type: 'apiKey', name: 'X-Auth-Email', in: 'header' }, { type: 'apiKey', name: 'X-Auth-Key', in: 'header' }], ...config, throwOnError: config.throwOnError ?? true }) as Promise<RequestResult<WorkerScriptListWorkersResponses, ThrowOnError>>)
+  }
+
+/**
+   * @description Returns a Workers subdomain for an account.
+   * @summary Get a Workers Subdomain
+   * {@link /accounts/:account_id/workers/subdomain}
+   */
+    public workerSubdomainGetSubdomain<ThrowOnError extends boolean = true>(options: Options<WorkerSubdomainGetSubdomainOptions, ThrowOnError>): Unwrappable<RequestResult<WorkerSubdomainGetSubdomainResponses, ThrowOnError>> {
+    const { client: request = this.client, ...config } = options
+
+    return withUnwrap(request({ method: 'GET', url: '/accounts/{account_id}/workers/subdomain', security: [{ type: 'http', scheme: 'bearer' }, { type: 'apiKey', name: 'X-Auth-Email', in: 'header' }, { type: 'apiKey', name: 'X-Auth-Key', in: 'header' }], ...config, throwOnError: config.throwOnError ?? true }) as Promise<RequestResult<WorkerSubdomainGetSubdomainResponses, ThrowOnError>>)
+  }
+
+/**
+   * @description Lists, searches, sorts, and filters your zones. Listing zones across more than 500 accounts
+   * is currently not allowed.
+   * @summary List Zones
+   * {@link /zones}
+   */
+    public zonesGet<ThrowOnError extends boolean = true>(options: Options<ZonesGetOptions, ThrowOnError> = {}): Unwrappable<RequestResult<ZonesGetResponses, ThrowOnError>> {
+    const { client: request = this.client, ...config } = options
+
+    return withUnwrap(request({ method: 'GET', url: '/zones', security: [{ type: 'http', scheme: 'bearer' }, { type: 'apiKey', name: 'X-Auth-Email', in: 'header' }, { type: 'apiKey', name: 'X-Auth-Key', in: 'header' }], styles: { query: { type: { style: 'form', explode: false } } }, ...config, throwOnError: config.throwOnError ?? true }) as Promise<RequestResult<ZonesGetResponses, ThrowOnError>>)
+  }
+
+/**
+   * @description Retrieves tags for a specific zone-level resource.
+   * @summary Get tags for a zone-level resource
+   * {@link /zones/:zone_id/tags}
+   */
+    public tagsZoneGet<ThrowOnError extends boolean = true>(options: Options<TagsZoneGetOptions, ThrowOnError>): Unwrappable<RequestResult<TagsZoneGetResponses, ThrowOnError>> {
+    const { client: request = this.client, ...config } = options
+
+    return withUnwrap(request({ method: 'GET', url: '/zones/{zone_id}/tags', security: [{ type: 'apiKey', name: 'X-Auth-Email', in: 'header' }, { type: 'apiKey', name: 'X-Auth-Key', in: 'header' }], ...config, throwOnError: config.throwOnError ?? true }) as Promise<RequestResult<TagsZoneGetResponses, ThrowOnError>>)
+  }
+
+/**
+   * @description Creates or updates tags for a specific zone-level resource. Replaces all existing tags for the resource.
+   * @summary Set tags for a zone-level resource
+   * {@link /zones/:zone_id/tags}
+   */
+    public tagsZoneSet<ThrowOnError extends boolean = true>(options: Options<TagsZoneSetOptions, ThrowOnError>): Unwrappable<RequestResult<TagsZoneSetResponses, ThrowOnError>> {
+    const { client: request = this.client, ...config } = options
+
+    return withUnwrap(request({ method: 'PUT', url: '/zones/{zone_id}/tags', security: [{ type: 'apiKey', name: 'X-Auth-Email', in: 'header' }, { type: 'apiKey', name: 'X-Auth-Key', in: 'header' }], contentType: { request: 'application/json' }, ...config, throwOnError: config.throwOnError ?? true }) as Promise<RequestResult<TagsZoneSetResponses, ThrowOnError>>)
   }
 }

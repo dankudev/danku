@@ -47,10 +47,13 @@ new D1("db");
 
 **5. Create a Cloudflare account API token.** Use an **account** token, not a personal one from My Profile: it belongs to the account rather than to you, so CI keeps working if your membership changes, and Cloudflare's tagging docs recommend it for automation. In the dashboard, open the test account → **Manage Account** → **Account API Tokens** → **Create Token** → **Create Custom Token**:
 
-One policy, with **Entire Account** as its resources (account-level permissions only; domain permissions such as Zone and DNS appear under **All Domains** and need a second policy once danku manages them):
+A policy with **Entire Account** as its resources (account-level permissions):
 
 - **Developer Platform → D1 → Edit** (the API calls this group "D1 Write"; Edit includes reading): `danku deploy` creates databases.
+- **Workers → Admin**: wrangler uploads Workers. Editor isn't enough: it can't create new Workers. The legacy **Workers Scripts → Edit** still works, but Admin is its replacement.
 - **App Security → Tag Management → Edit**: danku finds and labels its resources through tags. Search for "tag" to find it. Don't confuse it with **Access: Tags**, which is for Zero Trust Access.
+
+For a `Zone` (a Worker served on your domain), domain permissions appear under **All Domains** (or one domain) and need a second policy. Not yet confirmed against a real account: **Zone → Zone → Read** (danku lists zones), plus whatever Cloudflare asks for when wrangler attaches the custom domain (likely **Zone → Workers Routes → Edit**) and when danku tags the zone.
 
 **Tagging may not work on every account yet.** The changelog says Resource Tagging is in public beta and rolling out to all accounts (2026-04-27), but Cloudflare's OpenAPI spec marks the tag endpoints as Enterprise-only and lists only the Global API Key for them. The second `curl` below tells you which is true for your account: a 403 saying "Tagging is not enabled for this account" means the account doesn't have it, and danku can't deploy there until that changes.
 

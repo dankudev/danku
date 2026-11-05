@@ -43,7 +43,10 @@ export async function main(argv: string[], run: Run = spawnRun): Promise<number>
       new Argument("<preset>", "What the project is for").choices(["localbusiness", "saas"]),
     )
     .action((project: string, preset: string) => create(project, preset, run));
-  program.command("deploy").description("Make the cloud match danku/deploy.ts").action(deploy);
+  program
+    .command("deploy")
+    .description("Make the cloud match danku/deploy.ts")
+    .action(() => deploy(run));
   program
     .command("generate")
     .description("Write the files apps need from danku/deploy.ts, offline")
