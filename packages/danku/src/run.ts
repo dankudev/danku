@@ -8,7 +8,6 @@ export type Run = (command: string, args: string[], cwd: string) => Promise<void
 /** Runs a command attached to the terminal; rejects when it cannot start or exits non-zero. */
 export const spawnRun: Run = (command, args, cwd) =>
   new Promise((resolvePromise, reject) => {
-    // No shell: arguments are passed as is, and `vp` is an executable (vp.exe on Windows).
     const child = spawn(command, args, { cwd, stdio: "inherit" });
     child.on("error", (error: NodeJS.ErrnoException) => {
       reject(

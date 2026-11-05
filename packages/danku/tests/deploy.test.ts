@@ -76,7 +76,7 @@ const writes = (requests: { route: string }[]) =>
   requests.map(({ route }) => route).filter((route) => !route.startsWith("GET "));
 
 test("a first deploy in CI creates and tags the database", async () => {
-  await project({ ...workspace, ...named("@acme/acme"), ...deployTs('new D1("db");') });
+  await project({ ...workspace, ...named("acme"), ...deployTs('new D1("db");') });
   const requests = mockCloudflare({
     "GET /tags/resources": ok([]),
     // Someone else's database in the same account: never shown or touched.
@@ -85,7 +85,6 @@ test("a first deploy in CI creates and tags the database", async () => {
     "PUT /tags": ok({}),
   });
 
-  // The @scope/ is dropped from the project name.
   expect(await danku(["deploy"])).toEqual({
     exitCode: 0,
     stdout: "+ D1 db: create acme-db",
@@ -681,8 +680,6 @@ test("in dev, from inside an app, it skips CI-only kinds without a token or netw
         'const web = new D1("web");\nnew Worker("web", { app: "apps/web", bindings: { DB: web } });\n' +
           'new DnsRecord("spf", { domain: new Zone("acme.dev"), type: "TXT", content: "v=spf1 -all" });',
       ),
-      // Only the root's deploy.ts counts.
-      "apps/web/danku/deploy.ts": 'throw new Error("not the root deploy.ts");',
     },
     "apps/web",
   );
@@ -705,19 +702,13 @@ test("a broken setup stops before calling Cloudflare", async () => {
     message: (dir: string) => string;
   }[] = [
     {
-      files: {},
-      message: () =>
-        "danku must run inside a pnpm workspace (no pnpm-workspace.yaml in this folder or any folder above it)",
-    },
-    {
       files: workspace,
-      message: (dir) =>
-        `${join(dir, "danku", "deploy.ts")} was not found; it belongs at the repo root`,
+      message: (dir) => `no danku/deploy.ts in ${dir} or its parent folders`,
     },
-    ...[undefined, "My_App"].map((name) => ({
+    ...[undefined, "My_App", "@acme/shop"].map((name) => ({
       files: { ...workspace, ...named(name), ...deployTs('new D1("db");') },
       message: (dir: string) =>
-        `${join(dir, "package.json")}: "name" is the project name; use lowercase letters, digits and dashes`,
+        `${join(dir, "package.json")}: "name" is the project name; use lowercase letters, digits and dashes, without a scope`,
     })),
     { files: acme(""), message: () => "danku/deploy.ts declares no resources" },
     {

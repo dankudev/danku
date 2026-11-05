@@ -157,9 +157,8 @@ test("a broken setup stops before writing anything", async () => {
     },
     // Project loading is shared with `danku deploy`, whose tests cover its other errors.
     {
-      files: without("pnpm-workspace.yaml"),
-      message: () =>
-        "danku must run inside a pnpm workspace (no pnpm-workspace.yaml in this folder or any folder above it)",
+      files: without("danku/deploy.ts"),
+      message: (dir) => `no danku/deploy.ts in ${dir} or its parent folders`,
     },
   ];
 

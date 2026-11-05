@@ -2,7 +2,6 @@ import { readdir, readFile, rm, writeFile } from "node:fs/promises";
 import { join, resolve } from "node:path";
 
 import { CliError } from "./error.ts";
-import { findRoot } from "./project.ts";
 import type { Run } from "./run.ts";
 
 async function readJson<T>(file: string): Promise<T> {
@@ -64,12 +63,7 @@ const APP_NAME = "web";
  * `project` and `preset` are already validated by the command line.
  */
 export async function create(project: string, preset: string, run: Run): Promise<void> {
-  // Inside an existing repository this would nest a second one, like `ng new` or `rails new`.
-  const existing = findRoot();
-  if (existing) {
-    throw new CliError(`danku create makes a new repository; run it outside ${existing}`);
-  }
-
+  // Inside an existing workspace, `vp create vite:monorepo` refuses before writing anything.
   const cwd = process.cwd();
   const directory = resolve(cwd, project);
   const app = join(directory, "apps", APP_NAME);

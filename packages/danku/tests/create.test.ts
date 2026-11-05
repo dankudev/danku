@@ -313,11 +313,6 @@ test("a taken target fails without running vp", async () => {
       () => rm(project(), { recursive: true }).then(() => writeFile(project(), "")),
       () => `${project()} already exists and is not a directory`,
     ],
-    // Last, since it applies to everything below this folder: inside a repository, never nest one.
-    [
-      () => writeFile(join(dir, "pnpm-workspace.yaml"), "packages:\n  - apps/*\n"),
-      () => `danku create makes a new repository; run it outside ${dir}`,
-    ],
   ];
   const run = vi.fn<Run>();
 
