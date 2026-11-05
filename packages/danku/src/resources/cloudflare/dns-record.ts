@@ -19,7 +19,7 @@ export type DnsRecordInputs =
       type: "A" | "AAAA" | "CNAME";
       /**
        * Served through Cloudflare (the orange cloud) instead of pointing straight at `content`.
-       * Off unless set, also when adopting a hand-made record that has it on.
+       * Off unless set.
        */
       proxied?: boolean;
     })
@@ -56,13 +56,13 @@ function key(type: string, hostname: string, content: string): string {
 
 /**
  * A DNS record in a zone. Its name in deploy.ts is only a label (`"spf"`): a zone can hold several
- * records of one type and name. A record you added by hand with the same type, name and content is
- * adopted; records aren't data, so ones removed from deploy.ts are deleted.
+ * records of one type and name. danku never takes over a record it didn't create: one already in the
+ * zone with the same type, name and content stops the deploy until you remove it, and danku creates
+ * its own. Records aren't data, so ones removed from deploy.ts are deleted.
  */
 export class DnsRecord extends Resource<DnsRecordInputs, Outputs> {
   // Local dev serves the app on localhost.
   static ciOnly = true;
-  static adopt = true;
   /** Every record in the zones list() read, for checks across records. */
   static existing: { id: string; name: string; owner?: Owner; outputs: Outputs }[] = [];
 
@@ -213,7 +213,7 @@ export class DnsRecord extends Resource<DnsRecordInputs, Outputs> {
     await tag({ type: "dns_record", id, zone }, owner);
   }
 
-  // Also adopting: a record added by hand gets exactly what deploy.ts says (priority, proxied).
+  // Also when a record gets a new label in deploy.ts: it's kept, and re-tagged with the label.
   async update(owner: Owner): Promise<void> {
     const { client } = cloudflare();
     const zone = this.zone().id!;

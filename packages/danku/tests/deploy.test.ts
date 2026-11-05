@@ -7,6 +7,7 @@ import type { Run } from "../src/run.ts";
 import { acme, cleanUp, copy, danku, deployTs, named, project, workspace } from "./project.ts";
 
 const databaseId = "c3f2a1e0-0000-4000-8000-000000000001";
+const zoneId = "023e105f4ecef8ad9ca31a8372d0c353";
 
 beforeEach(() => {
   // Explicit both ways, so the tests behave the same on a laptop and in CI.
@@ -46,6 +47,8 @@ function mockCloudflare(overrides: Record<string, unknown>) {
     "GET /workers/scripts": ok([]),
     "GET /workers/domains": ok([]),
     "GET /workers/subdomain": ok({ subdomain: "acme-team" }),
+    // Rulesets are read in every zone danku uses: acme.dev has none.
+    [`GET /zones/${zoneId}/rulesets`]: ok([]),
     ...overrides,
   };
   vi.stubEnv("CLOUDFLARE_API_TOKEN", "token");
@@ -333,7 +336,6 @@ test("the same build skips the Worker, a new build redeploys it", async () => {
   }
 });
 
-const zoneId = "023e105f4ecef8ad9ca31a8372d0c353";
 /** The account's zones: acme.dev, ready to serve, and one nobody declared. */
 const zones = (status = "active") =>
   ok([
@@ -490,12 +492,11 @@ new DnsRecord("dmarc", { domain: zone.sub("_dmarc"), type: "TXT", content: "v=DM
 const records = `/zones/${zoneId}/dns_records`;
 /** Records already in acme.dev, added by hand; Cloudflare returns TXT content quoted. */
 const handMade = [
-  { id: "spf-id", type: "TXT", name: "acme.dev", content: '"v=spf1 include:_spf.google.com ~all"' },
+  { id: "verify-id", type: "TXT", name: "acme.dev", content: '"google-site-verification=abc"' },
   { id: "dmarc-none-id", type: "TXT", name: "_dmarc.acme.dev", content: '"v=DMARC1; p=none"' },
-  { id: "www-id", type: "AAAA", name: "www.acme.dev", content: "100::" },
 ];
 
-test("DNS records are created, identical hand-made ones adopted, and others left alone", async () => {
+test("DNS records are created and kept, and hand-made ones left alone", async () => {
   await project(acme(mail));
   let created = 0;
   const requests = mockCloudflare({
@@ -504,7 +505,6 @@ test("DNS records are created, identical hand-made ones adopted, and others left
     [`PUT /zones/${zoneId}/tags`]: ok({}),
     [`GET ${records}`]: ok(handMade),
     [`POST ${records}`]: () => ok({ id: `new-${++created}` }),
-    [`PUT ${records}/spf-id`]: ok({ id: "spf-id" }),
   });
 
   expect(await danku(["deploy"])).toEqual({
@@ -512,19 +512,19 @@ test("DNS records are created, identical hand-made ones adopted, and others left
     stdout:
       "~ Zone acme.dev: adopt acme.dev\n" +
       "+ DnsRecord mail: create MX acme.dev smtp.google.com\n" +
-      "~ DnsRecord spf: adopt TXT acme.dev v=spf1 include:_spf.google.com ~all\n" +
+      "+ DnsRecord spf: create TXT acme.dev v=spf1 include:_spf.google.com ~all\n" +
       "+ DnsRecord dmarc: create TXT _dmarc.acme.dev v=DMARC1; p=quarantine",
     stderr: "",
   });
 
-  // Each record is written, then tagged through its zone; the other two hand-made records aren't
-  // touched, and only the zone deploy.ts uses is read.
+  // Each record is written, then tagged through its zone; the hand-made records aren't touched,
+  // and only the zone deploy.ts uses is read.
   const tags = `PUT /zones/${zoneId}/tags`;
   expect(writes(requests)).toEqual([
     tags,
     `POST ${records}`,
     tags,
-    `PUT ${records}/spf-id`,
+    `POST ${records}`,
     tags,
     `POST ${records}`,
     tags,
@@ -537,10 +537,8 @@ test("DNS records are created, identical hand-made ones adopted, and others left
     requests.filter((it) => it.route === route).map(({ body }) => body);
   expect(bodies(`POST ${records}`)).toEqual([
     { type: "MX", name: "acme.dev", ttl: 1, content: "smtp.google.com", priority: 1 },
-    { type: "TXT", name: "_dmarc.acme.dev", ttl: 1, content: '"v=DMARC1; p=quarantine"' },
-  ]);
-  expect(bodies(`PUT ${records}/spf-id`)).toEqual([
     { type: "TXT", name: "acme.dev", ttl: 1, content: '"v=spf1 include:_spf.google.com ~all"' },
+    { type: "TXT", name: "_dmarc.acme.dev", ttl: 1, content: '"v=DMARC1; p=quarantine"' },
   ]);
   const tagBodies = bodies(tags) as {
     resource_type: string;
@@ -556,15 +554,15 @@ test("DNS records are created, identical hand-made ones adopted, and others left
   ).toEqual([
     ["zone", zoneId, "acme.dev"],
     ["dns_record", "new-1", "mail"],
-    ["dns_record", "spf-id", "spf"],
-    ["dns_record", "new-2", "dmarc"],
+    ["dns_record", "new-2", "spf"],
+    ["dns_record", "new-3", "dmarc"],
   ]);
 
   // Next deploy: all of it is danku's and unchanged.
   const tagsOf = (id: string) => tagBodies.find(({ resource_id }) => resource_id === id)!.tags;
   const owned = [
     tagged(zoneId, tagsOf(zoneId), "zone", zoneId),
-    ...["new-1", "spf-id", "new-2"].map((id) => tagged(id, tagsOf(id), "dns_record", zoneId)),
+    ...["new-1", "new-2", "new-3"].map((id) => tagged(id, tagsOf(id), "dns_record", zoneId)),
   ];
   const account = {
     "GET /tags/resources": ok(owned),
@@ -572,7 +570,13 @@ test("DNS records are created, identical hand-made ones adopted, and others left
     [`GET ${records}`]: ok([
       ...handMade,
       { id: "new-1", type: "MX", name: "acme.dev", content: "smtp.google.com", priority: 1 },
-      { id: "new-2", type: "TXT", name: "_dmarc.acme.dev", content: '"v=DMARC1; p=quarantine"' },
+      {
+        id: "new-2",
+        type: "TXT",
+        name: "acme.dev",
+        content: '"v=spf1 include:_spf.google.com ~all"',
+      },
+      { id: "new-3", type: "TXT", name: "_dmarc.acme.dev", content: '"v=DMARC1; p=quarantine"' },
     ]),
   };
   await project(acme(mail));
@@ -610,8 +614,8 @@ new DnsRecord("spf-google", { domain: zone, type: "TXT", content: "v=spf1 includ
     [`GET /zones/${zoneId}/tags`]: ok({ tags: {} }),
     [`PUT /zones/${zoneId}/tags`]: ok({}),
     [`PUT ${records}/new-1`]: ok({ id: "new-1" }),
-    [`PUT ${records}/spf-id`]: ok({ id: "spf-id" }),
-    [`DELETE ${records}/new-2`]: ok({ id: "new-2" }),
+    [`PUT ${records}/new-2`]: ok({ id: "new-2" }),
+    [`DELETE ${records}/new-3`]: ok({ id: "new-3" }),
     [`DELETE ${otherRecords}/old-id`]: ok({ id: "old-id" }),
   });
   expect(await danku(["deploy"])).toEqual({
@@ -627,9 +631,9 @@ new DnsRecord("spf-google", { domain: zone, type: "TXT", content: "v=spf1 includ
   expect(writes(changed)).toEqual([
     `PUT ${records}/new-1`,
     tags,
-    `PUT ${records}/spf-id`,
+    `PUT ${records}/new-2`,
     tags,
-    `DELETE ${records}/new-2`,
+    `DELETE ${records}/new-3`,
     `DELETE ${otherRecords}/old-id`,
   ]);
   expect(changed.find(({ route }) => route === `PUT ${records}/new-1`)!.body).toMatchObject({
@@ -641,18 +645,29 @@ new DnsRecord("spf-google", { domain: zone, type: "TXT", content: "v=spf1 includ
   expect(relabelled.tags["danku.name"]).toBe("spf-google");
 });
 
-test("long record content is cut short in the plan", async () => {
+test("long TXT content is cut short in the plan, and matched across Cloudflare's 255-byte strings", async () => {
   const key = `v=DKIM1; k=rsa; p=${"A".repeat(400)}`;
   await project(
     acme(
       `new DnsRecord("dkim", { domain: new Zone("acme.dev").sub("google._domainkey"), type: "TXT", content: "${key}" });`,
     ),
   );
-  const requests = mockCloudflare({
+  const name = `TXT google._domainkey.acme.dev ${key}`;
+  mockCloudflare({
     "GET /zones": zones(),
     [`GET /zones/${zoneId}/tags`]: ok({ tags: {} }),
     [`PUT /zones/${zoneId}/tags`]: ok({}),
-    // Cloudflare split an identical hand-made record into 255-byte strings: still the same record.
+    [`GET ${records}`]: ok([]),
+    [`POST ${records}`]: ok({ id: "dkim-id" }),
+  });
+  const { stdout } = await danku(["deploy"]);
+  expect(stdout.split("\n")[1]).toBe(`+ DnsRecord dkim: create ${name.slice(0, 79)}…`);
+
+  // The same record added by hand, which Cloudflare split into 255-byte strings: still the same
+  // record, so danku refuses to add a second one.
+  await copy(process.cwd());
+  const requests = mockCloudflare({
+    "GET /zones": zones(),
     [`GET ${records}`]: ok([
       {
         id: "dkim-id",
@@ -661,15 +676,213 @@ test("long record content is cut short in the plan", async () => {
         content: `"${key.slice(0, 255)}" "${key.slice(255)}"`,
       },
     ]),
-    [`PUT ${records}/dkim-id`]: ok({ id: "dkim-id" }),
+  });
+  expect(await danku(["deploy"])).toMatchObject({
+    exitCode: 1,
+    stderr: `DnsRecord "dkim": ${name} already exists, but danku didn't create it; remove it, or change danku/deploy.ts so they don't clash`,
+  });
+  expect(writes(requests)).toEqual([]);
+});
+
+const www = `const zone = new Zone("acme.dev");
+new DnsRecord("www", { domain: zone.sub("www"), type: "AAAA", content: "100::", proxied: true });`;
+const rulesets = `/zones/${zoneId}/rulesets`;
+
+test("redirects join the zone's ruleset, are kept, changed and deleted, leaving other rules alone", async () => {
+  const shop = `new DnsRecord("shop", { domain: zone.sub("shop"), type: "AAAA", content: "100::", proxied: true });
+new RedirectRule("shop", { from: zone.sub("shop"), to: "https://acme.com" });`;
+  await project(
+    acme(`${www}
+new RedirectRule("www", { from: zone.sub("www"), to: "https://acme.dev" });
+${shop}`),
+  );
+  const ids = ["www-id", "shop-id"];
+  const requests = mockCloudflare({
+    "GET /zones": zones(),
+    [`GET /zones/${zoneId}/tags`]: ok({ tags: {} }),
+    [`PUT /zones/${zoneId}/tags`]: ok({}),
+    [`GET ${records}`]: ok(handMade),
+    [`POST ${records}`]: () => ok({ id: ids.shift() }),
+    // No redirects in acme.dev yet: only a ruleset of another phase.
+    [`GET ${rulesets}`]: ok([
+      { id: "managed-id", name: "x", kind: "managed", phase: "http_request_firewall_managed" },
+    ]),
+    // Both answer with the whole ruleset.
+    [`POST ${rulesets}`]: ok({
+      id: "redirects-id",
+      rules: [{ id: "www-rule", ref: "danku:acme:www" }],
+    }),
+    [`POST ${rulesets}/redirects-id/rules`]: ok({
+      id: "redirects-id",
+      rules: [
+        { id: "www-rule", ref: "danku:acme:www" },
+        { id: "shop-rule", ref: "danku:acme:shop" },
+      ],
+    }),
   });
 
-  const { stdout } = await danku(["deploy"]);
-  const line = stdout.split("\n")[1];
-  expect(line).toBe(
-    `~ DnsRecord dkim: adopt ${`TXT google._domainkey.acme.dev ${key}`.slice(0, 79)}…`,
+  expect(await danku(["deploy"])).toEqual({
+    exitCode: 0,
+    stdout:
+      "~ Zone acme.dev: adopt acme.dev\n" +
+      "+ DnsRecord www: create AAAA www.acme.dev 100::\n" +
+      "+ RedirectRule www: create www.acme.dev → https://acme.dev\n" +
+      "+ DnsRecord shop: create AAAA shop.acme.dev 100::\n" +
+      "+ RedirectRule shop: create shop.acme.dev → https://acme.com",
+    stderr: "",
+  });
+  // The zone had no redirect ruleset: the first rule creates it, the second joins it.
+  const tags = `PUT /zones/${zoneId}/tags`;
+  expect(writes(requests)).toEqual([
+    tags,
+    `POST ${records}`,
+    tags,
+    `POST ${rulesets}`,
+    `POST ${records}`,
+    tags,
+    `POST ${rulesets}/redirects-id/rules`,
+  ]);
+  const body = (requests: { route: string; body: unknown }[], route: string) =>
+    requests.find((it) => it.route === route)!.body;
+  // Proxied, so Cloudflare runs the redirect.
+  expect(body(requests, `POST ${records}`)).toMatchObject({ proxied: true });
+  // Rules can't be tagged: `ref` says whose a rule is, `description` keeps the hash.
+  const rule = (host: string, to: string, name: string) => ({
+    expression: `http.host eq "${host}"`,
+    action: "redirect",
+    action_parameters: {
+      from_value: {
+        target_url: { expression: `concat("${to}", http.request.uri.path)` },
+        status_code: 301,
+        preserve_query_string: true,
+      },
+    },
+    ref: `danku:acme:${name}`,
+    description: expect.stringMatching(new RegExp(`^danku acme/${name} [0-9a-f]{16}$`)),
+  });
+  expect(body(requests, `POST ${rulesets}`)).toEqual({
+    name: "default",
+    kind: "zone",
+    phase: "http_request_dynamic_redirect",
+    rules: [rule("www.acme.dev", "https://acme.dev", "www")],
+  });
+  const shopRule = body(requests, `POST ${rulesets}/redirects-id/rules`);
+  expect(shopRule).toEqual(rule("shop.acme.dev", "https://acme.com", "shop"));
+
+  // Next deploys: the ruleset now also holds a rule added in the dashboard.
+  const tagBodies = requests.filter((it) => it.route === tags).map(({ body }) => body) as {
+    resource_id: string;
+    tags: Record<string, string>;
+  }[];
+  const wwwRule = (body(requests, `POST ${rulesets}`) as { rules: object[] }).rules[0];
+  const account = {
+    "GET /tags/resources": ok(
+      tagBodies.map(({ resource_id, tags }) =>
+        tagged(resource_id, tags, resource_id === zoneId ? "zone" : "dns_record", zoneId),
+      ),
+    ),
+    "GET /zones": zones(),
+    [`GET ${records}`]: ok([
+      ...handMade,
+      { id: "www-id", type: "AAAA", name: "www.acme.dev", content: "100::" },
+      { id: "shop-id", type: "AAAA", name: "shop.acme.dev", content: "100::" },
+    ]),
+    [`GET ${rulesets}`]: ok([
+      { id: "redirects-id", name: "default", kind: "zone", phase: "http_request_dynamic_redirect" },
+    ]),
+    [`GET ${rulesets}/redirects-id`]: ok({
+      id: "redirects-id",
+      rules: [
+        {
+          // Made in the dashboard or by another tool, with a ref shaped like danku's.
+          id: "hand-made-id",
+          ref: "redirects:acme:old",
+          expression: 'http.host eq "old.acme.dev"',
+          action: "redirect",
+        },
+        { ...wwwRule, id: "www-rule" },
+        { ...(shopRule as object), id: "shop-rule" },
+      ],
+    }),
+  };
+  await copy(process.cwd());
+  const again = mockCloudflare(account);
+  expect(await danku(["deploy"])).toEqual({
+    exitCode: 0,
+    stdout:
+      "= Zone acme.dev: no changes\n" +
+      "= DnsRecord www: no changes\n" +
+      "= RedirectRule www: no changes → https://acme.dev\n" +
+      "= DnsRecord shop: no changes\n" +
+      "= RedirectRule shop: no changes → https://acme.com",
+    stderr: "",
+  });
+  expect(writes(again)).toEqual([]);
+
+  // A new target updates the rule in place, a new redirect joins the ruleset, and one removed
+  // from deploy.ts is deleted, its record too; the hand-made rule is never touched.
+  await project(
+    acme(`${www}
+new RedirectRule("www", { from: zone.sub("www"), to: "https://acme.com/" });
+new DnsRecord("blog", { domain: zone.sub("blog"), type: "AAAA", content: "100::", proxied: true });
+new RedirectRule("blog", { from: zone.sub("blog"), to: "https://acme.com" });`),
   );
-  expect(writes(requests)).toContain(`PUT ${records}/dkim-id`);
+  const changed = mockCloudflare({
+    ...account,
+    [`PATCH ${rulesets}/redirects-id/rules/www-rule`]: ok({ id: "redirects-id" }),
+    [`POST ${records}`]: ok({ id: "blog-id" }),
+    [`PUT /zones/${zoneId}/tags`]: ok({}),
+    [`POST ${rulesets}/redirects-id/rules`]: ok({
+      id: "redirects-id",
+      rules: [{ id: "blog-rule", ref: "danku:acme:blog" }],
+    }),
+    [`DELETE ${records}/shop-id`]: ok({ id: "shop-id" }),
+    [`DELETE ${rulesets}/redirects-id/rules/shop-rule`]: ok({ id: "redirects-id" }),
+  });
+  expect(await danku(["deploy"])).toEqual({
+    exitCode: 0,
+    stdout:
+      "= Zone acme.dev: no changes\n" +
+      "= DnsRecord www: no changes\n" +
+      "~ RedirectRule www: update www.acme.dev → https://acme.com/\n" +
+      "+ DnsRecord blog: create AAAA blog.acme.dev 100::\n" +
+      "+ RedirectRule blog: create blog.acme.dev → https://acme.com\n" +
+      "- DnsRecord shop: delete AAAA shop.acme.dev 100::\n" +
+      "- RedirectRule shop: delete shop.acme.dev",
+    stderr: "",
+  });
+  expect(writes(changed)).toEqual([
+    `PATCH ${rulesets}/redirects-id/rules/www-rule`,
+    `POST ${records}`,
+    tags,
+    `POST ${rulesets}/redirects-id/rules`,
+    `DELETE ${records}/shop-id`,
+    `DELETE ${rulesets}/redirects-id/rules/shop-rule`,
+  ]);
+  // The trailing slash of `to` isn't doubled before the path.
+  expect(body(changed, `PATCH ${rulesets}/redirects-id/rules/www-rule`)).toEqual(
+    rule("www.acme.dev", "https://acme.com", "www"),
+  );
+  expect(body(changed, `POST ${rulesets}/redirects-id/rules`)).toEqual(
+    rule("blog.acme.dev", "https://acme.com", "blog"),
+  );
+
+  // No redirects left: they're still found in the zone, and deleted.
+  await project(acme(`new Zone("acme.dev");`));
+  const none = mockCloudflare({
+    ...account,
+    [`DELETE ${records}/www-id`]: ok({ id: "www-id" }),
+    [`DELETE ${records}/shop-id`]: ok({ id: "shop-id" }),
+    [`DELETE ${rulesets}/redirects-id/rules/www-rule`]: ok({ id: "redirects-id" }),
+    [`DELETE ${rulesets}/redirects-id/rules/shop-rule`]: ok({ id: "redirects-id" }),
+  });
+  expect(await danku(["deploy"])).toMatchObject({ exitCode: 0, stderr: "" });
+  expect(writes(none)).toEqual([
+    `DELETE ${records}/www-id`,
+    `DELETE ${records}/shop-id`,
+    `DELETE ${rulesets}/redirects-id/rules/www-rule`,
+    `DELETE ${rulesets}/redirects-id/rules/shop-rule`,
+  ]);
 });
 
 test("in dev, from inside an app, it skips CI-only kinds without a token or network", async () => {
@@ -760,6 +973,25 @@ new DnsRecord("a", { domain: zone, type: "CNAME", content: "Target.acme.dev." })
 new DnsRecord("b", { domain: zone, type: "CNAME", content: "target.acme.dev" });`),
       message: () => 'DnsRecord "b" is the same record as DnsRecord "a"',
     },
+    ...["https://acme.dev/home", "acme.dev"].map((to) => ({
+      files: acme(
+        `new RedirectRule("www", { from: new Zone("acme.dev").sub("www"), to: "${to}" });`,
+      ),
+      message: () =>
+        'RedirectRule "www": `to` takes a site such as https://example.com, without a path; the path and query of each request are kept',
+    })),
+    {
+      files: acme(
+        `new RedirectRule("www", { from: new Zone("acme.dev").sub("www"), to: "https://www.acme.dev" });`,
+      ),
+      message: () => 'RedirectRule "www": redirecting www.acme.dev to itself would loop',
+    },
+    {
+      files: acme(`const zone = new Zone("acme.dev");
+new RedirectRule("a", { from: zone.sub("www"), to: "https://acme.dev" });
+new RedirectRule("b", { from: zone.sub("www"), to: "https://acme.com" });`),
+      message: () => 'RedirectRule "b" redirects the same name as RedirectRule "a"',
+    },
     {
       files: acme(web),
       message: () =>
@@ -845,7 +1077,7 @@ test("Cloudflare's problems are reported in one line", async () => {
           { uuid: databaseId, name: "acme-db" },
         ]),
       },
-      message: `D1 "db": acme-db already exists, but danku didn't create it (it has no danku tags); remove it or rename the resource in danku/deploy.ts`,
+      message: `D1 "db": acme-db already exists, but danku didn't create it; remove it, or change danku/deploy.ts so they don't clash`,
     },
     {
       // danku adopts zones but never creates them.
@@ -893,6 +1125,20 @@ new DnsRecord("app", { domain: zone.sub("app"), type: "A", content: "192.0.2.1" 
         'DnsRecord "app": app.acme.dev is the domain of Worker "web", and Cloudflare manages its DNS record',
     },
     {
+      // The same record, added by hand: danku doesn't take it over.
+      files: acme(
+        `new DnsRecord("www", { domain: new Zone("acme.dev").sub("www"), type: "AAAA", content: "100::" });`,
+      ),
+      routes: {
+        "GET /zones": zones(),
+        [`GET /zones/${zoneId}/dns_records`]: ok([
+          { id: "www-id", type: "AAAA", name: "www.acme.dev", content: "100::" },
+        ]),
+      },
+      message:
+        "DnsRecord \"www\": AAAA www.acme.dev 100:: already exists, but danku didn't create it; remove it, or change danku/deploy.ts so they don't clash",
+    },
+    {
       // The same record, owned by another danku project: never adopted.
       files: acme(
         `new DnsRecord("spf", { domain: new Zone("acme.dev"), type: "TXT", content: "v=spf1 -all" });`,
@@ -908,6 +1154,77 @@ new DnsRecord("app", { domain: zone.sub("app"), type: "A", content: "192.0.2.1" 
       },
       message:
         'DnsRecord "spf": TXT acme.dev v=spf1 -all already exists, and belongs to the danku project "other"',
+    },
+    {
+      files: acme(`${www}
+new RedirectRule("www", { from: zone.sub("www"), to: "https://acme.dev" });`),
+      routes: { "GET /zones": zones("pending"), [`GET /zones/${zoneId}/dns_records`]: ok([]) },
+      message:
+        "RedirectRule \"www\": the domain acme.dev isn't active in Cloudflare yet (it's pending); finish adding it in the dashboard, then deploy again",
+    },
+    {
+      // Without a proxied record, Cloudflare would never run the redirect.
+      files: acme(`const zone = new Zone("acme.dev");
+new DnsRecord("www", { domain: zone.sub("www"), type: "AAAA", content: "100::" });
+new RedirectRule("www", { from: zone.sub("www"), to: "https://acme.dev" });`),
+      routes: { "GET /zones": zones(), [`GET /zones/${zoneId}/dns_records`]: ok([]) },
+      message:
+        'RedirectRule "www": Cloudflare redirects only proxied names; declare one for www.acme.dev, e.g. new DnsRecord("www", { domain: …, type: "AAAA", content: "100::", proxied: true })',
+    },
+    {
+      files: built(`${onDomain}
+new RedirectRule("app", { from: zone.sub("app"), to: "https://acme.dev" });`),
+      routes: { "GET /zones": zones() },
+      message:
+        'RedirectRule "app": app.acme.dev is the domain of Worker "web", which the redirect would make unreachable',
+    },
+    {
+      // Another danku project already redirects the name.
+      files: acme(`${www}
+new RedirectRule("www", { from: zone.sub("www"), to: "https://acme.dev" });`),
+      routes: {
+        "GET /zones": zones(),
+        [`GET /zones/${zoneId}/dns_records`]: ok([]),
+        [`GET /zones/${zoneId}/rulesets`]: ok([
+          {
+            id: "redirects-id",
+            name: "default",
+            kind: "zone",
+            phase: "http_request_dynamic_redirect",
+          },
+        ]),
+        [`GET /zones/${zoneId}/rulesets/redirects-id`]: ok({
+          id: "redirects-id",
+          rules: [
+            { id: "rule-id", ref: "danku:other:www", expression: 'http.host eq "www.acme.dev"' },
+          ],
+        }),
+      },
+      message:
+        'RedirectRule "www": www.acme.dev already exists, and belongs to the danku project "other"',
+    },
+    {
+      // A redirect for the same name made in the dashboard: only the first would ever run.
+      files: acme(`${www}
+new RedirectRule("www", { from: zone.sub("www"), to: "https://acme.dev" });`),
+      routes: {
+        "GET /zones": zones(),
+        [`GET /zones/${zoneId}/dns_records`]: ok([]),
+        [`GET /zones/${zoneId}/rulesets`]: ok([
+          {
+            id: "redirects-id",
+            name: "default",
+            kind: "zone",
+            phase: "http_request_dynamic_redirect",
+          },
+        ]),
+        [`GET /zones/${zoneId}/rulesets/redirects-id`]: ok({
+          id: "redirects-id",
+          rules: [{ id: "rule-id", ref: "rule-id", expression: 'http.host eq "www.acme.dev"' }],
+        }),
+      },
+      message:
+        "RedirectRule \"www\": www.acme.dev already exists, but danku didn't create it; remove it, or change danku/deploy.ts so they don't clash",
     },
   ];
 

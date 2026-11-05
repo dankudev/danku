@@ -2671,6 +2671,2414 @@ export const resourceTaggingZoneResourceType = {
 
 export type ResourceTaggingZoneResourceTypeKey = (typeof resourceTaggingZoneResourceType)[keyof typeof resourceTaggingZoneResourceType];
 
+/**
+ * @description The action to perform when the rule matches.
+ * @pattern ^[a-z_]+$
+ * @type string
+ */
+export type RulesetsRuleAction = string;
+
+/**
+ * @description The category of a rule.
+ * @minLength 1
+ * @example directory-traversal
+ * @type string
+ */
+export type RulesetsRuleCategory = string;
+
+/**
+ * @description The categories of the rule.
+ * @type array
+ */
+export type RulesetsRuleCategories = RulesetsRuleCategory[];
+
+/**
+ * @description Whether the rule should be executed.
+ * @example true
+ * @type boolean
+ */
+export type RulesetsRuleEnabled = boolean;
+
+/**
+ * @description Configuration for exposed credential checking.
+ * @type object
+ */
+export type RulesetsRuleExposedCredentialCheck = {
+  /**
+   * @description An expression that selects the password used in the credentials check.
+   * @minLength 1
+   * @example url_decode(http.request.body.form[\"password\"][0])
+   * @type string
+   */
+  password_expression: string;
+  /**
+   * @description An expression that selects the user ID used in the credentials check.
+   * @minLength 1
+   * @example url_decode(http.request.body.form[\"username\"][0])
+   * @type string
+   */
+  username_expression: string;
+};
+
+/**
+ * @description The unique ID of the rule.
+ * @pattern ^[0-9a-f]{32}$
+ * @example 3a03d665bac047339bb530ecb439a90d
+ * @type string
+ */
+export type RulesetsRuleId = string;
+
+/**
+ * @description An object configuring the rule's logging behavior.
+ * @type object
+ */
+export type RulesetsRuleLogging = {
+  /**
+   * @description Whether to generate a log when the rule matches.
+   * @example true
+   * @type boolean
+   */
+  enabled: boolean;
+};
+
+/**
+ * @description An object configuring the rule's rate limit behavior.
+ * @type object
+ */
+export type RulesetsRuleRatelimit = {
+  /**
+   * @description Characteristics of the request on which the rate limit counter will be incremented.
+   * @type array
+   */
+  characteristics: string[];
+  /**
+   * @description An expression that defines when the rate limit counter should be incremented. It defaults to the same as the rule's expression.
+   * @minLength 1
+   * @example http.request.body.raw eq "abcd"
+   * @type string | undefined
+   */
+  counting_expression?: string;
+  /**
+   * @description Period of time in seconds after which the action will be disabled following its first execution.
+   * @example 600
+   * @type integer | undefined
+   */
+  mitigation_timeout?: number;
+  /**
+   * @description Period in seconds over which the counter is being incremented.
+   * @minimum 0
+   * @example 60
+   * @type integer
+   */
+  period: number;
+  /**
+   * @description The threshold of requests per period after which the action will be executed for the first time.
+   * @minimum 1
+   * @example 1000
+   * @type integer | undefined
+   */
+  requests_per_period?: number;
+  /**
+   * @description Whether counting is only performed when an origin is reached.
+   * @default false
+   * @example true
+   * @type boolean | undefined
+   */
+  requests_to_origin?: boolean;
+  /**
+   * @description The score threshold per period for which the action will be executed the first time.
+   * @example 400
+   * @type integer | undefined
+   */
+  score_per_period?: number;
+  /**
+   * @description A response header name provided by the origin, which contains the score to increment rate limit counter with.
+   * @minLength 1
+   * @example my-score
+   * @type string | undefined
+   */
+  score_response_header_name?: string;
+};
+
+export type RulesetsRuleSchema = {
+  /**
+   * @description The action to perform when the rule matches.
+   * @pattern ^[a-z_]+$
+   * @type string | undefined
+   */
+  action?: RulesetsRuleAction;
+  /**
+   * @description The parameters configuring the rule's action.
+   * @default {}
+   * @type object | undefined
+   */
+  action_parameters?: object;
+  /**
+   * @description The categories of the rule.
+   * @type array | undefined
+   */
+  readonly categories?: RulesetsRuleCategories;
+  /**
+   * @description An informative description of the rule.
+   * @default ''
+   * @type string | undefined
+   */
+  description?: string;
+  enabled?: RulesetsRuleEnabled & boolean;
+  /**
+   * @description Configuration for exposed credential checking.
+   * @type object | undefined
+   */
+  exposed_credential_check?: RulesetsRuleExposedCredentialCheck;
+  /**
+   * @description The expression defining which traffic will match the rule.
+   * @minLength 1
+   * @example ip.src eq 1.1.1.1
+   * @type string | undefined
+   */
+  expression?: string;
+  /**
+   * @description The unique ID of the rule.
+   * @pattern ^[0-9a-f]{32}$
+   * @example 3a03d665bac047339bb530ecb439a90d
+   * @type string | undefined
+   */
+  id?: RulesetsRuleId;
+  /**
+   * @description The timestamp of when the rule was last modified.
+   *
+   * Format: `date-time`
+   * @example 2000-01-01T00:00:00Z
+   * @type string
+   */
+  readonly last_updated: string;
+  /**
+   * @description An object configuring the rule's logging behavior.
+   * @type object | undefined
+   */
+  logging?: RulesetsRuleLogging;
+  /**
+   * @description An object configuring the rule's rate limit behavior.
+   * @type object | undefined
+   */
+  ratelimit?: RulesetsRuleRatelimit;
+  /**
+   * @description The reference of the rule (the rule's ID by default).
+   * @minLength 1
+   * @example my_ref
+   * @type string | undefined
+   */
+  ref?: string;
+  /**
+   * @description The version of the rule.
+   * @pattern ^[0-9]+$
+   * @example 1
+   * @type string
+   */
+  readonly version: string;
+};
+
+export type RulesetsBlockRule = RulesetsRuleSchema & {
+  action?: 'block';
+  action_parameters?: {
+    /**
+     * @description The response to show when the block is applied.
+     * @type object | undefined
+     */
+    response?: {
+      /**
+       * @description The content to return.
+       * @minLength 1
+       * @example {
+       *   "success": false,
+       *   "error": "you have been blocked"
+       * }
+       * @type string
+       */
+      content: string;
+      /**
+       * @description The type of the content to return.
+       * @minLength 1
+       * @example application/json
+       * @type string
+       */
+      content_type: string;
+      /**
+       * @description The status code to return.
+       * @minimum 400
+       * @maximum 499
+       * @type integer
+       */
+      status_code: number;
+    };
+  };
+  /**
+   * @example Block the request.
+   * @type string | undefined
+   */
+  description?: string;
+};
+
+export type RulesetsChallengeRule = RulesetsRuleSchema & {
+  action?: 'challenge';
+  /**
+   * @example Issue an Interactive Challenge if the visitor has not solved an Interactive Challenge prior to the request.
+   * @type string | undefined
+   */
+  description?: string;
+};
+
+export const rulesetsCompressResponseRuleActionParametersAlgorithmsNameEnum = {
+  none: 'none',
+  auto: 'auto',
+  default: 'default',
+  gzip: 'gzip',
+  brotli: 'brotli',
+  zstd: 'zstd',
+} as const;
+
+export type RulesetsCompressResponseRuleActionParametersAlgorithmsNameEnumKey = (typeof rulesetsCompressResponseRuleActionParametersAlgorithmsNameEnum)[keyof typeof rulesetsCompressResponseRuleActionParametersAlgorithmsNameEnum];
+
+export type RulesetsCompressResponseRule = RulesetsRuleSchema & {
+  action?: 'compress_response';
+  action_parameters?: {
+    /**
+     * @description Custom order for compression algorithms.
+     * @type array
+     */
+    algorithms: {
+      /**
+       * @description Name of the compression algorithm to enable.
+       * @example none
+       * @type string | undefined
+       */
+      name?: RulesetsCompressResponseRuleActionParametersAlgorithmsNameEnumKey;
+    }[];
+  };
+  /**
+   * @example Modify the compression algorithm used in the response.
+   * @type string | undefined
+   */
+  description?: string;
+};
+
+/**
+ * @description The cursor to use for the next page.
+ * @minLength 1
+ * @example dGhpc2lzYW5leGFtcGxlCg
+ * @type string
+ */
+export type RulesetsCursor = string;
+
+export type RulesetsDDoSDynamicRule = RulesetsRuleSchema & {
+  action?: 'ddos_dynamic';
+  /**
+   * @example Perform a specific action according to a set of internal guidelines defined by Cloudflare.
+   * @type string | undefined
+   */
+  description?: string;
+};
+
+/**
+ * @description A message.
+ * @type object
+ */
+export type RulesetsMessage = {
+  /**
+   * @description A unique code for this message.
+   * @example 10000
+   * @type integer | undefined
+   */
+  code?: number;
+  /**
+   * @description A text description of this message.
+   * @minLength 1
+   * @example something bad happened
+   * @type string
+   */
+  message: string;
+  /**
+   * @description The source of this message.
+   * @type object | undefined
+   */
+  source?: {
+    /**
+     * @description A JSON pointer to the field that is the source of the message.
+     * @minLength 1
+     * @example /rules/0/action
+     * @type string
+     */
+    pointer: string;
+  };
+};
+
+/**
+ * @description A list of error messages.
+ * @type array
+ */
+export type RulesetsErrors = RulesetsMessage[];
+
+export const rulesetsExecuteSensitivityLevel = {
+  default: 'default',
+  medium: 'medium',
+  low: 'low',
+  eoff: 'eoff',
+} as const;
+
+export type RulesetsExecuteSensitivityLevelKey = (typeof rulesetsExecuteSensitivityLevel)[keyof typeof rulesetsExecuteSensitivityLevel];
+
+/**
+ * @description A list of category-level overrides. This option has the second-highest precedence after rule-level overrides.
+ * @type array
+ */
+export type RulesetsExecuteCategoryOverrides = {
+  action?: RulesetsRuleAction & string;
+  category: RulesetsRuleCategory & string;
+  enabled?: RulesetsRuleEnabled & boolean;
+  sensitivity_level?: RulesetsExecuteSensitivityLevelKey & string;
+}[];
+
+/**
+ * @description The configuration to use for matched data logging.
+ * @type object
+ */
+export type RulesetsExecuteMatchedData = {
+  /**
+   * @description The public key to encrypt matched data logs with.
+   * @minLength 1
+   * @example iGqBmyIUxuWt1rvxoAharN9FUXneUBxA/Y19PyyrEG0=
+   * @type string
+   */
+  public_key: string;
+};
+
+/**
+ * @description A list of rule-level overrides. This option has the highest precedence.
+ * @type array
+ */
+export type RulesetsExecuteRuleOverrides = {
+  action?: RulesetsRuleAction & string;
+  enabled?: RulesetsRuleEnabled & boolean;
+  id: RulesetsRuleId & string;
+  /**
+   * @description The score threshold to use for the rule.
+   * @type integer | undefined
+   */
+  score_threshold?: number;
+  sensitivity_level?: RulesetsExecuteSensitivityLevelKey & string;
+}[];
+
+/**
+ * @description A set of overrides to apply to the target ruleset.
+ * @type object
+ */
+export type RulesetsExecuteOverrides = {
+  action?: RulesetsRuleAction & string;
+  /**
+   * @description A list of category-level overrides. This option has the second-highest precedence after rule-level overrides.
+   * @type array | undefined
+   */
+  categories?: RulesetsExecuteCategoryOverrides;
+  enabled?: RulesetsRuleEnabled & boolean;
+  /**
+   * @description A list of rule-level overrides. This option has the highest precedence.
+   * @type array | undefined
+   */
+  rules?: RulesetsExecuteRuleOverrides;
+  sensitivity_level?: RulesetsExecuteSensitivityLevelKey & string;
+};
+
+/**
+ * @description The unique ID of the ruleset.
+ * @pattern ^[0-9a-f]{32}$
+ * @example 2f2feab2026849078ba485f918791bdc
+ * @type string
+ */
+export type RulesetsRulesetId = string;
+
+export type RulesetsExecuteRule = RulesetsRuleSchema & {
+  action?: 'execute';
+  action_parameters?: {
+    id: RulesetsRulesetId & string;
+    /**
+     * @description The configuration to use for matched data logging.
+     * @type object | undefined
+     */
+    matched_data?: RulesetsExecuteMatchedData;
+    /**
+     * @description A set of overrides to apply to the target ruleset.
+     * @type object | undefined
+     */
+    overrides?: RulesetsExecuteOverrides;
+  };
+  /**
+   * @example Execute another ruleset.
+   * @type string | undefined
+   */
+  description?: string;
+};
+
+export type RulesetsForceConnectionCloseRule = RulesetsRuleSchema & {
+  action?: 'force_connection_close';
+  /**
+   * @example Close ongoing HTTP connections. This action does not block a request, but it forces the client to reconnect. For HTTP/2 and HTTP/3 connections, the connection will be closed even if it breaks other requests running on the same connection.
+   * @type string | undefined
+   */
+  description?: string;
+};
+
+export type RulesetsJsChallengeRule = RulesetsRuleSchema & {
+  action?: 'js_challenge';
+  /**
+   * @example Issue a non-interactive JavaScript Challenge if the visitor has not solved an Interactive Challenge, Managed Challenge, or JavaScript Challenge prior to the request.
+   * @type string | undefined
+   */
+  description?: string;
+};
+
+/**
+ * @description The cookie fields to log.
+ * @type array
+ */
+export type RulesetsLogCustomFieldCookieFields = {
+  /**
+   * @description The name of the cookie.
+   * @minLength 1
+   * @example myCookie
+   * @type string
+   */
+  name: string;
+}[];
+
+/**
+ * @description The raw response fields to log.
+ * @type array
+ */
+export type RulesetsLogCustomFieldRawResponseFields = {
+  /**
+   * @description The name of the response header.
+   * @minLength 1
+   * @example my-response-header
+   * @type string
+   */
+  name: string;
+  /**
+   * @description Whether to log duplicate values of the same header.
+   * @default false
+   * @example true
+   * @type boolean | undefined
+   */
+  preserve_duplicates?: boolean;
+}[];
+
+/**
+ * @description The raw request fields to log.
+ * @type array
+ */
+export type RulesetsLogCustomFieldRequestFields = {
+  /**
+   * @description The name of the header.
+   * @minLength 1
+   * @example my-request-header
+   * @type string
+   */
+  name: string;
+}[];
+
+/**
+ * @description The transformed response fields to log.
+ * @type array
+ */
+export type RulesetsLogCustomFieldResponseFields = {
+  /**
+   * @description The name of the response header.
+   * @minLength 1
+   * @example my-response-header
+   * @type string
+   */
+  name: string;
+  /**
+   * @description Whether to log duplicate values of the same header.
+   * @default false
+   * @example true
+   * @type boolean | undefined
+   */
+  preserve_duplicates?: boolean;
+}[];
+
+/**
+ * @description The transformed request fields to log.
+ * @type array
+ */
+export type RulesetsLogCustomFieldTransformedRequestFields = {
+  /**
+   * @description The name of the header.
+   * @minLength 1
+   * @example my-request-header
+   * @type string
+   */
+  name: string;
+}[];
+
+export type RulesetsLogCustomFieldRule = RulesetsRuleSchema & {
+  action?: 'log_custom_field';
+  action_parameters?: {
+    /**
+     * @description The cookie fields to log.
+     * @type array | undefined
+     */
+    cookie_fields?: RulesetsLogCustomFieldCookieFields;
+    /**
+     * @description The raw response fields to log.
+     * @type array | undefined
+     */
+    raw_response_fields?: RulesetsLogCustomFieldRawResponseFields;
+    /**
+     * @description The raw request fields to log.
+     * @type array | undefined
+     */
+    request_fields?: RulesetsLogCustomFieldRequestFields;
+    /**
+     * @description The transformed response fields to log.
+     * @type array | undefined
+     */
+    response_fields?: RulesetsLogCustomFieldResponseFields;
+    /**
+     * @description The transformed request fields to log.
+     * @type array | undefined
+     */
+    transformed_request_fields?: RulesetsLogCustomFieldTransformedRequestFields;
+  };
+  /**
+   * @example Log additional custom fields.
+   * @type string | undefined
+   */
+  description?: string;
+};
+
+export type RulesetsLogRule = RulesetsRuleSchema & {
+  action?: 'log';
+  /**
+   * @example Log the request.
+   * @type string | undefined
+   */
+  description?: string;
+};
+
+export type RulesetsManagedChallengeRule = RulesetsRuleSchema & {
+  action?: 'managed_challenge';
+  /**
+   * @example Issue a Managed Challenge if the visitor has not solved a Managed Challenge or Interactive Challenge prior to the request.
+   * @type string | undefined
+   */
+  description?: string;
+};
+
+/**
+ * @description A list of warning messages.
+ * @type array
+ */
+export type RulesetsMessages = RulesetsMessage[];
+
+/**
+ * @description A response object.
+ * @type object
+ */
+export type RulesetsResponse = {
+  /**
+   * @description A list of error messages.
+   * @type array
+   */
+  errors: RulesetsErrors;
+  /**
+   * @description A list of warning messages.
+   * @type array
+   */
+  messages: RulesetsMessages;
+  /**
+   * @description A result.
+   */
+  result: object | object[] | string | number | boolean;
+  /**
+   * @description Whether the API call was successful.
+   * @type boolean
+   */
+  success: boolean;
+};
+
+/**
+ * @description The number of rulesets to return per page.
+ * @minimum 1
+ * @maximum 50
+ * @example 3
+ * @type integer
+ */
+export type RulesetsPerPage = number;
+
+/**
+ * @description A redirect based on a bulk list lookup.
+ * @type object
+ */
+export type RulesetsRedirectFromList = {
+  /**
+   * @description An expression that evaluates to the list lookup key.
+   * @minLength 1
+   * @example http.request.full_uri
+   * @type string
+   */
+  key: string;
+  /**
+   * @description The name of the list to match against.
+   * @pattern ^[a-zA-Z0-9_]+$
+   * @example my_list
+   * @type string
+   */
+  name: string;
+};
+
+export const rulesetsRedirectFromValueStatusCodeEnum = {
+  '301': 301,
+  '302': 302,
+  '303': 303,
+  '307': 307,
+  '308': 308,
+} as const;
+
+export type RulesetsRedirectFromValueStatusCodeEnumKey = (typeof rulesetsRedirectFromValueStatusCodeEnum)[keyof typeof rulesetsRedirectFromValueStatusCodeEnum];
+
+/**
+ * @description A redirect based on the request properties.
+ * @type object
+ */
+export type RulesetsRedirectFromValue = {
+  /**
+   * @description Whether to keep the query string of the original request.
+   * @default false
+   * @example true
+   * @type boolean | undefined
+   */
+  preserve_query_string?: boolean;
+  /**
+   * @description The status code to use for the redirect.
+   * @example 302
+   * @type number | undefined
+   */
+  status_code?: RulesetsRedirectFromValueStatusCodeEnumKey;
+  /**
+   * @description A URL to redirect the request to.
+   * @type object
+   */
+  target_url: {
+    /**
+     * @description An expression that evaluates to a URL to redirect the request to.
+     * @minLength 1
+     * @example concat("https://example.com", http.request.uri.path)
+     * @type string | undefined
+     */
+    expression?: string;
+    /**
+     * @description A URL to redirect the request to.
+     * @minLength 1
+     * @example https://example.com
+     * @type string | undefined
+     */
+    value?: string;
+  };
+};
+
+export type RulesetsRedirectRule = RulesetsRuleSchema & {
+  action?: 'redirect';
+  action_parameters?: {
+    /**
+     * @description A redirect based on a bulk list lookup.
+     * @type object | undefined
+     */
+    from_list?: RulesetsRedirectFromList;
+    /**
+     * @description A redirect based on the request properties.
+     * @type object | undefined
+     */
+    from_value?: RulesetsRedirectFromValue;
+  };
+  /**
+   * @example Redirect the request.
+   * @type string | undefined
+   */
+  description?: string;
+};
+
+/**
+ * @description The operation to perform on the header.
+ * @type string
+ */
+export type RulesetsRewriteHeaderOperation = string;
+
+/**
+ * @description A static value for the header.
+ * @minLength 1
+ * @example my-header-value
+ * @type string
+ */
+export type RulesetsRewriteHeaderValue = string;
+
+/**
+ * @description An expression that evaluates to a value for the header.
+ * @minLength 1
+ * @example ip.src
+ * @type string
+ */
+export type RulesetsRewriteHeaderExpression = string;
+
+/**
+ * @description A map of headers to rewrite.
+ * @example {"client-http-version":{"expression":"http.request.version","operation":"set"}}
+ * @type object
+ */
+export type RulesetsRewriteHeaders = {
+  [key: string]: {
+    operation: RulesetsRewriteHeaderOperation & 'add';
+    /**
+     * @description A static value for the header.
+     * @minLength 1
+     * @example my-header-value
+     * @type string
+     */
+    value: RulesetsRewriteHeaderValue;
+  } | {
+    /**
+     * @description An expression that evaluates to a value for the header.
+     * @minLength 1
+     * @example ip.src
+     * @type string
+     */
+    expression: RulesetsRewriteHeaderExpression;
+    operation: RulesetsRewriteHeaderOperation & 'add';
+  } | {
+    operation: RulesetsRewriteHeaderOperation & 'set';
+    /**
+     * @description A static value for the header.
+     * @minLength 1
+     * @example my-header-value
+     * @type string
+     */
+    value: RulesetsRewriteHeaderValue;
+  } | {
+    /**
+     * @description An expression that evaluates to a value for the header.
+     * @minLength 1
+     * @example ip.src
+     * @type string
+     */
+    expression: RulesetsRewriteHeaderExpression;
+    operation: RulesetsRewriteHeaderOperation & 'set';
+  } | {
+    operation: RulesetsRewriteHeaderOperation & 'remove';
+  };
+};
+
+/**
+ * @description A URI path rewrite.
+ * @type object
+ */
+export type RulesetsRewriteUriPath = {
+  /**
+   * @description An expression that evaluates to a value to rewrite the URI path to.
+   * @minLength 1
+   * @example regex_replace(http.request.uri.path, "/foo$", "/bar")
+   * @type string | undefined
+   */
+  expression?: string;
+  /**
+   * @description A value to rewrite the URI path to.
+   * @minLength 1
+   * @example /foo
+   * @type string | undefined
+   */
+  value?: string;
+};
+
+/**
+ * @description A URI query rewrite.
+ * @type object
+ */
+export type RulesetsRewriteUriQuery = {
+  /**
+   * @description An expression that evaluates to a value to rewrite the URI query to.
+   * @minLength 1
+   * @example regex_replace(http.request.uri.query, "foo=bar", "")
+   * @type string | undefined
+   */
+  expression?: string;
+  /**
+   * @description A value to rewrite the URI query to.
+   * @example foo=bar
+   * @type string | undefined
+   */
+  value?: string;
+};
+
+export type RulesetsRewriteUri = ({
+  /**
+   * @description A URI path rewrite.
+   * @type object
+   */
+  path: RulesetsRewriteUriPath;
+} | {
+  /**
+   * @description A URI query rewrite.
+   * @type object
+   */
+  query: RulesetsRewriteUriQuery;
+}) & {
+  /**
+   * @description Whether to propagate the rewritten URI to origin.
+   * @example false
+   * @type boolean | undefined
+   */
+  readonly origin?: boolean;
+};
+
+export type RulesetsRewriteRule = RulesetsRuleSchema & {
+  action?: 'rewrite';
+  action_parameters?: {
+    /**
+     * @description A map of headers to rewrite.
+     * @example {"client-http-version":{"expression":"http.request.version","operation":"set"}}
+     * @type object | undefined
+     */
+    headers?: RulesetsRewriteHeaders;
+    uri?: RulesetsRewriteUri;
+  };
+  /**
+   * @example Rewrite properties of the request or response.
+   * @type string | undefined
+   */
+  description?: string;
+};
+
+/**
+ * @description A value to rewrite the HTTP host header to.
+ * @minLength 1
+ * @example static.example.com
+ * @type string
+ */
+export type RulesetsRouteHostHeader = string;
+
+/**
+ * @description An origin to route to.
+ * @type object
+ */
+export type RulesetsRouteOrigin = {
+  /**
+   * @description A resolved host to route to.
+   * @minLength 1
+   * @example static.example.com
+   * @type string | undefined
+   */
+  host?: string;
+  /**
+   * @description A destination port to route to.
+   * @minimum 1
+   * @maximum 65535
+   * @example 80
+   * @type integer | undefined
+   */
+  port?: number;
+};
+
+/**
+ * @description A Server Name Indication (SNI) override.
+ * @type object
+ */
+export type RulesetsRouteSNI = {
+  /**
+   * @description A value to override the SNI to.
+   * @minLength 1
+   * @example static.example.com
+   * @type string
+   */
+  value: string;
+};
+
+export type RulesetsRouteRule = RulesetsRuleSchema & {
+  action?: 'route';
+  action_parameters?: {
+    /**
+     * @description A value to rewrite the HTTP host header to.
+     * @minLength 1
+     * @example static.example.com
+     * @type string | undefined
+     */
+    host_header?: RulesetsRouteHostHeader;
+    /**
+     * @description An origin to route to.
+     * @type object | undefined
+     */
+    origin?: RulesetsRouteOrigin;
+    /**
+     * @description A Server Name Indication (SNI) override.
+     * @type object | undefined
+     */
+    sni?: RulesetsRouteSNI;
+  };
+  /**
+   * @example Select an origin server to route the request to.
+   * @type string | undefined
+   */
+  description?: string;
+};
+
+/**
+ * @description A delta to change the score by, which can be either positive or negative.
+ * @example 3
+ * @type integer
+ */
+export type RulesetsScoreIncrement = number;
+
+export type RulesetsScoreRule = RulesetsRuleSchema & {
+  action?: 'score';
+  action_parameters?: {
+    /**
+     * @description A delta to change the score by, which can be either positive or negative.
+     * @example 3
+     * @type integer
+     */
+    increment: RulesetsScoreIncrement;
+  };
+  /**
+   * @example Increment the cumulative score.
+   * @type string | undefined
+   */
+  description?: string;
+};
+
+export const rulesetsServeErrorContentType = {
+  'application/json': 'application/json',
+  'text/html': 'text/html',
+  'text/plain': 'text/plain',
+  'text/xml': 'text/xml',
+} as const;
+
+export type RulesetsServeErrorContentTypeKey = (typeof rulesetsServeErrorContentType)[keyof typeof rulesetsServeErrorContentType];
+
+/**
+ * @description The status code to use for the error.
+ * @minimum 400
+ * @maximum 999
+ * @example 500
+ * @type integer
+ */
+export type RulesetsServeErrorStatusCode = number;
+
+/**
+ * @description The response content.
+ * @minLength 1
+ * @example {
+ *   "error": "1xxx error occurred"
+ * }
+ * @type string
+ */
+export type RulesetsServeErrorContent = string;
+
+/**
+ * @description The name of a custom asset to serve as the error response.
+ * @minLength 1
+ * @example 500_errors
+ * @type string
+ */
+export type RulesetsServeErrorAssetName = string;
+
+export type RulesetsServeErrorRule = RulesetsRuleSchema & {
+  action?: 'serve_error';
+  action_parameters?: {
+    /**
+     * @description The content type header to set with the error response.
+     * @example application/json
+     * @type string
+     */
+    content_type: RulesetsServeErrorContentTypeKey;
+    /**
+     * @description The status code to use for the error.
+     * @minimum 400
+     * @maximum 999
+     * @example 500
+     * @type integer | undefined
+     */
+    status_code?: RulesetsServeErrorStatusCode;
+  } & ({
+    /**
+     * @description The response content.
+     * @minLength 1
+     * @example {
+     *   "error": "1xxx error occurred"
+     * }
+     * @type string
+     */
+    content: RulesetsServeErrorContent;
+  } | {
+    /**
+     * @description The name of a custom asset to serve as the error response.
+     * @minLength 1
+     * @example 500_errors
+     * @type string
+     */
+    asset_name: RulesetsServeErrorAssetName;
+  });
+  /**
+   * @example Customize the serving of errors.
+   * @type string | undefined
+   */
+  description?: string;
+};
+
+/**
+ * @description Whether the directive should only be applied to the Cloudflare CDN cache.
+ * @default false
+ * @example false
+ * @type boolean
+ */
+export type RulesetsSetCacheControlCloudflareOnly = boolean;
+
+export const rulesetsSetCacheControlOperation = {
+  set: 'set',
+  remove: 'remove',
+} as const;
+
+export type RulesetsSetCacheControlOperationKey = (typeof rulesetsSetCacheControlOperation)[keyof typeof rulesetsSetCacheControlOperation];
+
+/**
+ * @description A cache-control directive configuration.
+ */
+export type RulesetsSetCacheControlDirective = {
+  /**
+   * @description Whether the directive should only be applied to the Cloudflare CDN cache.
+   * @default false
+   * @example false
+   * @type boolean | undefined
+   */
+  cloudflare_only?: RulesetsSetCacheControlCloudflareOnly;
+  operation: RulesetsSetCacheControlOperationKey & 'set';
+} | {
+  /**
+   * @description Whether the directive should only be applied to the Cloudflare CDN cache.
+   * @default false
+   * @example false
+   * @type boolean | undefined
+   */
+  cloudflare_only?: RulesetsSetCacheControlCloudflareOnly;
+  operation: RulesetsSetCacheControlOperationKey & 'remove';
+};
+
+/**
+ * @description A cache-control directive configuration that accepts a duration value in seconds.
+ */
+export type RulesetsSetCacheControlDirectiveWithValue = {
+  /**
+   * @description Whether the directive should only be applied to the Cloudflare CDN cache.
+   * @default false
+   * @example false
+   * @type boolean | undefined
+   */
+  cloudflare_only?: RulesetsSetCacheControlCloudflareOnly;
+  operation: RulesetsSetCacheControlOperationKey & 'set';
+  /**
+   * @description The duration value in seconds for the directive.
+   * @minimum 0
+   * @example 3600
+   * @type integer
+   */
+  value: number;
+} | {
+  /**
+   * @description Whether the directive should only be applied to the Cloudflare CDN cache.
+   * @default false
+   * @example false
+   * @type boolean | undefined
+   */
+  cloudflare_only?: RulesetsSetCacheControlCloudflareOnly;
+  operation: RulesetsSetCacheControlOperationKey & 'remove';
+};
+
+/**
+ * @description A cache-control directive configuration that accepts optional qualifiers (header names).
+ */
+export type RulesetsSetCacheControlDirectiveWithQualifiers = {
+  /**
+   * @description Whether the directive should only be applied to the Cloudflare CDN cache.
+   * @default false
+   * @example false
+   * @type boolean | undefined
+   */
+  cloudflare_only?: RulesetsSetCacheControlCloudflareOnly;
+  operation: RulesetsSetCacheControlOperationKey & 'set';
+  /**
+   * @description Optional list of header names to qualify the directive (e.g., for "private" or "no-cache" directives).
+   * @type array | undefined
+   */
+  qualifiers?: string[];
+} | {
+  /**
+   * @description Whether the directive should only be applied to the Cloudflare CDN cache.
+   * @default false
+   * @example false
+   * @type boolean | undefined
+   */
+  cloudflare_only?: RulesetsSetCacheControlCloudflareOnly;
+  operation: RulesetsSetCacheControlOperationKey & 'remove';
+};
+
+export type RulesetsSetCacheControlRule = RulesetsRuleSchema & {
+  action?: 'set_cache_control';
+  action_parameters?: {
+    /**
+     * @description A cache-control directive configuration.
+     */
+    immutable?: RulesetsSetCacheControlDirective;
+    /**
+     * @description A cache-control directive configuration that accepts a duration value in seconds.
+     */
+    'max-age'?: RulesetsSetCacheControlDirectiveWithValue;
+    /**
+     * @description A cache-control directive configuration.
+     */
+    'must-revalidate'?: RulesetsSetCacheControlDirective;
+    /**
+     * @description A cache-control directive configuration.
+     */
+    'must-understand'?: RulesetsSetCacheControlDirective;
+    /**
+     * @description A cache-control directive configuration that accepts optional qualifiers (header names).
+     */
+    'no-cache'?: RulesetsSetCacheControlDirectiveWithQualifiers;
+    /**
+     * @description A cache-control directive configuration.
+     */
+    'no-store'?: RulesetsSetCacheControlDirective;
+    /**
+     * @description A cache-control directive configuration.
+     */
+    'no-transform'?: RulesetsSetCacheControlDirective;
+    /**
+     * @description A cache-control directive configuration that accepts optional qualifiers (header names).
+     */
+    private?: RulesetsSetCacheControlDirectiveWithQualifiers;
+    /**
+     * @description A cache-control directive configuration.
+     */
+    'proxy-revalidate'?: RulesetsSetCacheControlDirective;
+    /**
+     * @description A cache-control directive configuration.
+     */
+    public?: RulesetsSetCacheControlDirective;
+    /**
+     * @description A cache-control directive configuration that accepts a duration value in seconds.
+     */
+    's-maxage'?: RulesetsSetCacheControlDirectiveWithValue;
+    /**
+     * @description A cache-control directive configuration that accepts a duration value in seconds.
+     */
+    'stale-if-error'?: RulesetsSetCacheControlDirectiveWithValue;
+    /**
+     * @description A cache-control directive configuration that accepts a duration value in seconds.
+     */
+    'stale-while-revalidate'?: RulesetsSetCacheControlDirectiveWithValue;
+  };
+  /**
+   * @example Modify the cache-control header directives in an Origin response.
+   * @type string | undefined
+   */
+  description?: string;
+};
+
+/**
+ * @description A list of additional ports that caching should be enabled on.
+ * @type array
+ */
+export type RulesetsSetCacheSettingsAdditionalCacheablePorts = number[];
+
+export const rulesetsSetCacheSettingsBrowserTTLModeEnum = {
+  respect_origin: 'respect_origin',
+  bypass_by_default: 'bypass_by_default',
+  override_origin: 'override_origin',
+  bypass: 'bypass',
+} as const;
+
+export type RulesetsSetCacheSettingsBrowserTTLModeEnumKey = (typeof rulesetsSetCacheSettingsBrowserTTLModeEnum)[keyof typeof rulesetsSetCacheSettingsBrowserTTLModeEnum];
+
+/**
+ * @description How long client browsers should cache the response. Cloudflare cache purge will not purge content cached on client browsers, so high browser TTLs may lead to stale content.
+ * @type object
+ */
+export type RulesetsSetCacheSettingsBrowserTTL = {
+  /**
+   * @description The browser TTL (in seconds) if you choose the "override_origin" mode.
+   * @minimum 0
+   * @example 60
+   * @type integer | undefined
+   */
+  default?: number;
+  /**
+   * @description The browser TTL mode.
+   * @example override_origin
+   * @type string
+   */
+  mode: RulesetsSetCacheSettingsBrowserTTLModeEnumKey;
+};
+
+/**
+ * @description Whether the request's response from the origin is eligible for caching. Caching itself will still depend on the cache control header and your other caching configurations.
+ * @example true
+ * @type boolean
+ */
+export type RulesetsSetCacheSettingsCache = boolean;
+
+/**
+ * @description Which cookies to include in the cache key.
+ * @type object
+ */
+export type RulesetsSetCacheSettingsCustomCacheKeyCookie = {
+  /**
+   * @description A list of cookies to check for the presence of. The presence of these cookies is included in the cache key.
+   * @type array | undefined
+   */
+  check_presence?: string[];
+  /**
+   * @description A list of cookies to include in the cache key.
+   * @type array | undefined
+   */
+  include?: string[];
+};
+
+/**
+ * @description Which headers to include in the cache key.
+ * @type object
+ */
+export type RulesetsSetCacheSettingsCustomCacheKeyHeader = {
+  /**
+   * @description A list of headers to check for the presence of. The presence of these headers is included in the cache key.
+   * @type array | undefined
+   */
+  check_presence?: string[];
+  /**
+   * @description A mapping of header names to a list of values. If a header is present in the request and contains any of the values provided, its value is included in the cache key.
+   * @example {"my-header":["my-header-value-1","my-header-value-2"]}
+   * @type object | undefined
+   */
+  contains?: {
+    [key: string]: string[];
+  };
+  /**
+   * @description Whether to exclude the origin header in the cache key.
+   * @example true
+   * @type boolean | undefined
+   */
+  exclude_origin?: boolean;
+  /**
+   * @description A list of headers to include in the cache key.
+   * @type array | undefined
+   */
+  include?: string[];
+};
+
+/**
+ * @description How to use the host in the cache key.
+ * @type object
+ */
+export type RulesetsSetCacheSettingsCustomCacheKeyHost = {
+  /**
+   * @description Whether to use the resolved host in the cache key.
+   * @example true
+   * @type boolean | undefined
+   */
+  resolved?: boolean;
+};
+
+/**
+ * @description Which query string parameters to include in or exclude from the cache key.
+ * @type object
+ */
+export type RulesetsSetCacheSettingsCustomCacheKeyQueryString = {
+  /**
+   * @description Which query string parameters to exclude from the cache key.
+   * @type object | undefined
+   */
+  exclude?: {
+    /**
+     * @description Whether to exclude all query string parameters from the cache key.
+     * @type boolean | undefined
+     */
+    all?: true;
+    /**
+     * @description A list of query string parameters to exclude from the cache key.
+     * @type array | undefined
+     */
+    list?: string[];
+  };
+  /**
+   * @description Which query string parameters to include in the cache key.
+   * @type object | undefined
+   */
+  include?: {
+    /**
+     * @description Whether to include all query string parameters in the cache key.
+     * @type boolean | undefined
+     */
+    all?: true;
+    /**
+     * @description A list of query string parameters to include in the cache key.
+     * @type array | undefined
+     */
+    list?: string[];
+  };
+};
+
+/**
+ * @description How to use characteristics of the request user agent in the cache key.
+ * @type object
+ */
+export type RulesetsSetCacheSettingsCustomCacheKeyUser = {
+  /**
+   * @description Whether to use the user agent's device type in the cache key.
+   * @example true
+   * @type boolean | undefined
+   */
+  device_type?: boolean;
+  /**
+   * @description Whether to use the user agents's country in the cache key.
+   * @example true
+   * @type boolean | undefined
+   */
+  geo?: boolean;
+  /**
+   * @description Whether to use the user agent's language in the cache key.
+   * @example true
+   * @type boolean | undefined
+   */
+  lang?: boolean;
+};
+
+/**
+ * @description Which components of the request are included or excluded from the cache key.
+ * @type object
+ */
+export type RulesetsSetCacheSettingsCustomCacheKey = {
+  /**
+   * @description Which cookies to include in the cache key.
+   * @type object | undefined
+   */
+  cookie?: RulesetsSetCacheSettingsCustomCacheKeyCookie;
+  /**
+   * @description Which headers to include in the cache key.
+   * @type object | undefined
+   */
+  header?: RulesetsSetCacheSettingsCustomCacheKeyHeader;
+  /**
+   * @description How to use the host in the cache key.
+   * @type object | undefined
+   */
+  host?: RulesetsSetCacheSettingsCustomCacheKeyHost;
+  /**
+   * @description Which query string parameters to include in or exclude from the cache key.
+   * @type object | undefined
+   */
+  query_string?: RulesetsSetCacheSettingsCustomCacheKeyQueryString;
+  /**
+   * @description How to use characteristics of the request user agent in the cache key.
+   * @type object | undefined
+   */
+  user?: RulesetsSetCacheSettingsCustomCacheKeyUser;
+};
+
+/**
+ * @description Which components of the request are included in or excluded from the cache key Cloudflare uses to store the response in cache.
+ * @type object
+ */
+export type RulesetsSetCacheSettingsCacheKey = {
+  /**
+   * @description Whether to separate cached content based on the visitor's device type.
+   * @example true
+   * @type boolean | undefined
+   */
+  cache_by_device_type?: boolean;
+  /**
+   * @description Whether to protect from web cache deception attacks, while allowing static assets to be cached.
+   * @example true
+   * @type boolean | undefined
+   */
+  cache_deception_armor?: boolean;
+  /**
+   * @description Which components of the request are included or excluded from the cache key.
+   * @type object | undefined
+   */
+  custom_key?: RulesetsSetCacheSettingsCustomCacheKey;
+  /**
+   * @description Whether to treat requests with the same query parameters the same, regardless of the order those query parameters are in.
+   * @example true
+   * @type boolean | undefined
+   */
+  ignore_query_strings_order?: boolean;
+};
+
+/**
+ * @description Settings to determine whether the request's response from origin is eligible for Cache Reserve (requires a Cache Reserve add-on plan).
+ * @type object
+ */
+export type RulesetsSetCacheSettingsCacheReserve = {
+  /**
+   * @description Whether Cache Reserve is enabled. If this is true and a request meets eligibility criteria, Cloudflare will write the resource to Cache Reserve.
+   * @example true
+   * @type boolean
+   */
+  eligible: boolean;
+  /**
+   * @description The minimum file size eligible for storage in Cache Reserve.
+   * @minimum 0
+   * @example 1024
+   * @type integer | undefined
+   */
+  minimum_file_size?: number;
+};
+
+/**
+ * @description A list of TTLs to apply to specific status codes or status code ranges.
+ * @type array
+ */
+export type RulesetsSetCacheSettingsStatusCodeTTL = {
+  /**
+   * @description A single status code to apply the TTL to.
+   * @minimum 100
+   * @maximum 999
+   * @example 200
+   * @type integer | undefined
+   */
+  status_code?: number;
+  /**
+   * @description A range of status codes to apply the TTL to.
+   * @type object | undefined
+   */
+  status_code_range?: {
+    /**
+     * @description The lower bound of the range.
+     * @minimum 100
+     * @maximum 999
+     * @example 200
+     * @type integer | undefined
+     */
+    from?: number;
+    /**
+     * @description The upper bound of the range.
+     * @minimum 100
+     * @maximum 999
+     * @example 299
+     * @type integer | undefined
+     */
+    to?: number;
+  };
+  /**
+   * @description The time to cache the response for (in seconds). A value of 0 is equivalent to setting the cache control header with the value "no-cache". A value of -1 is equivalent to setting the cache control header with the value of "no-store".
+   * @example 0
+   * @type integer
+   */
+  value: number;
+}[];
+
+export const rulesetsSetCacheSettingsEdgeTTLModeEnum = {
+  respect_origin: 'respect_origin',
+  bypass_by_default: 'bypass_by_default',
+  override_origin: 'override_origin',
+} as const;
+
+export type RulesetsSetCacheSettingsEdgeTTLModeEnumKey = (typeof rulesetsSetCacheSettingsEdgeTTLModeEnum)[keyof typeof rulesetsSetCacheSettingsEdgeTTLModeEnum];
+
+/**
+ * @description How long the Cloudflare edge network should cache the response.
+ * @type object
+ */
+export type RulesetsSetCacheSettingsEdgeTTL = {
+  /**
+   * @description The edge TTL (in seconds) if you choose the "override_origin" mode.
+   * @minimum 0
+   * @example 60
+   * @type integer | undefined
+   */
+  default?: number;
+  /**
+   * @description The edge TTL mode.
+   * @example override_origin
+   * @type string
+   */
+  mode: RulesetsSetCacheSettingsEdgeTTLModeEnumKey;
+  /**
+   * @description A list of TTLs to apply to specific status codes or status code ranges.
+   * @type array | undefined
+   */
+  status_code_ttl?: RulesetsSetCacheSettingsStatusCodeTTL;
+};
+
+/**
+ * @description Whether Cloudflare will aim to strictly adhere to RFC 7234.
+ * @example true
+ * @type boolean
+ */
+export type RulesetsSetCacheSettingsOriginCacheControl = boolean;
+
+/**
+ * @description Whether to generate Cloudflare error pages for issues from the origin server.
+ * @example true
+ * @type boolean
+ */
+export type RulesetsSetCacheSettingsOriginErrorPagePassthru = boolean;
+
+export const rulesetsSetCacheSettingsOriginRangeRequestsModeEnum = {
+  on: 'on',
+  off: 'off',
+  default: 'default',
+} as const;
+
+export type RulesetsSetCacheSettingsOriginRangeRequestsModeEnumKey = (typeof rulesetsSetCacheSettingsOriginRangeRequestsModeEnum)[keyof typeof rulesetsSetCacheSettingsOriginRangeRequestsModeEnum];
+
+/**
+ * @description Controls whether Cloudflare fetches a large asset from the origin as a series of range requests instead of one whole-body request.
+ * @type object
+ */
+export type RulesetsSetCacheSettingsOriginRangeRequests = {
+  /**
+   * @description Whether to use range requests. `default` is the behaviour the zone gets without this rule.
+   * @example on
+   * @type string
+   */
+  mode: RulesetsSetCacheSettingsOriginRangeRequestsModeEnumKey;
+};
+
+/**
+ * @description A timeout value between two successive read operations to use for your origin server. Historically, the timeout value between two read options from Cloudflare to an origin server is 100 seconds. If you are attempting to reduce HTTP 524 errors because of timeouts from an origin server, try increasing this timeout value.
+ * @minimum 100
+ * @maximum 6000
+ * @example 900
+ * @type integer
+ */
+export type RulesetsSetCacheSettingsReadTimeout = number;
+
+/**
+ * @description Whether Cloudflare should respect strong ETag (entity tag) headers. If false, Cloudflare converts strong ETag headers to weak ETag headers.
+ * @example true
+ * @type boolean
+ */
+export type RulesetsSetCacheSettingsRespectStrongEtags = boolean;
+
+/**
+ * @description When to serve stale content from cache.
+ * @type object
+ */
+export type RulesetsSetCacheSettingsServeStale = {
+  /**
+   * @description Whether Cloudflare should disable serving stale content while getting the latest content from the origin.
+   * @example true
+   * @type boolean | undefined
+   */
+  disable_stale_while_updating?: boolean;
+};
+
+/**
+ * @description Configuration for shared dictionary compression. When set, Cloudflare injects Use-As-Dictionary headers on matching cacheable responses.
+ * @type object
+ */
+export type RulesetsSetCacheSettingsSharedDictionary = {
+  /**
+   * @description URL pattern for the Use-As-Dictionary match field. This pattern specifies which URLs can use this response as a dictionary.
+   * @minLength 1
+   * @maxLength 1024
+   * @example /static/js/*.js
+   * @type string
+   */
+  match_pattern: string;
+};
+
+/**
+ * @description Whether to strip ETag headers from the origin response before caching.
+ * @example true
+ * @type boolean
+ */
+export type RulesetsSetCacheSettingsStripETags = boolean;
+
+/**
+ * @description Whether to strip Last-Modified headers from the origin response before caching.
+ * @example true
+ * @type boolean
+ */
+export type RulesetsSetCacheSettingsStripLastModified = boolean;
+
+/**
+ * @description Whether to strip Set-Cookie headers from the origin response before caching.
+ * @example true
+ * @type boolean
+ */
+export type RulesetsSetCacheSettingsStripSetCookie = boolean;
+
+export const rulesetsSetCacheSettingsVaryDefaultActionEnum = {
+  bypass: 'bypass',
+  passthrough: 'passthrough',
+  normalize: 'normalize',
+} as const;
+
+export type RulesetsSetCacheSettingsVaryDefaultActionEnumKey = (typeof rulesetsSetCacheSettingsVaryDefaultActionEnum)[keyof typeof rulesetsSetCacheSettingsVaryDefaultActionEnum];
+
+/**
+ * @description Controls how response Vary headers without a per-header override contribute to the cache key.
+ * @type object
+ */
+export type RulesetsSetCacheSettingsVaryDefault = {
+  /**
+   * @description How the header value is treated when building the cache key.
+   * @example normalize
+   * @type string
+   */
+  action: RulesetsSetCacheSettingsVaryDefaultActionEnumKey;
+};
+
+export const rulesetsSetCacheSettingsVaryHeaderActionEnum = {
+  bypass: 'bypass',
+  passthrough: 'passthrough',
+  normalize: 'normalize',
+} as const;
+
+export type RulesetsSetCacheSettingsVaryHeaderActionEnumKey = (typeof rulesetsSetCacheSettingsVaryHeaderActionEnum)[keyof typeof rulesetsSetCacheSettingsVaryHeaderActionEnum];
+
+/**
+ * @description Controls how a single request header contributes to the cache key.
+ * @type object
+ */
+export type RulesetsSetCacheSettingsVaryHeader = {
+  /**
+   * @description How the header value is treated when building the cache key.
+   * @example normalize
+   * @type string
+   */
+  action: RulesetsSetCacheSettingsVaryHeaderActionEnumKey;
+  /**
+   * @description The set of languages to normalize against. Only valid for the `accept-language` header.
+   * @type array | undefined
+   */
+  languages?: string[];
+  /**
+   * @description The set of media types to normalize against. Only valid for the `accept` header.
+   * @type array | undefined
+   */
+  media_types?: string[];
+};
+
+/**
+ * @description Controls how cached responses vary based on request headers. `default` is required by the API and applies to any Vary response header that does not have a per-header override.
+ * @type object
+ */
+export type RulesetsSetCacheSettingsVary = {
+  /**
+   * @description Controls how response Vary headers without a per-header override contribute to the cache key.
+   * @type object | undefined
+   */
+  default?: RulesetsSetCacheSettingsVaryDefault;
+  /**
+   * @description A mapping of lowercase request header names to their vary configuration.
+   * @example {"accept":{"action":"normalize","media_types":["image/webp","image/png"]}}
+   * @type object | undefined
+   */
+  headers?: {
+    [key: string]: RulesetsSetCacheSettingsVaryHeader;
+  };
+};
+
+export type RulesetsSetCacheSettingsRule = RulesetsRuleSchema & {
+  action?: 'set_cache_settings';
+  action_parameters?: {
+    /**
+     * @description A list of additional ports that caching should be enabled on.
+     * @type array | undefined
+     */
+    additional_cacheable_ports?: RulesetsSetCacheSettingsAdditionalCacheablePorts;
+    /**
+     * @description How long client browsers should cache the response. Cloudflare cache purge will not purge content cached on client browsers, so high browser TTLs may lead to stale content.
+     * @type object | undefined
+     */
+    browser_ttl?: RulesetsSetCacheSettingsBrowserTTL;
+    /**
+     * @description Whether the request's response from the origin is eligible for caching. Caching itself will still depend on the cache control header and your other caching configurations.
+     * @example true
+     * @type boolean | undefined
+     */
+    cache?: RulesetsSetCacheSettingsCache;
+    /**
+     * @description Which components of the request are included in or excluded from the cache key Cloudflare uses to store the response in cache.
+     * @type object | undefined
+     */
+    cache_key?: RulesetsSetCacheSettingsCacheKey;
+    /**
+     * @description Settings to determine whether the request's response from origin is eligible for Cache Reserve (requires a Cache Reserve add-on plan).
+     * @type object | undefined
+     */
+    cache_reserve?: RulesetsSetCacheSettingsCacheReserve;
+    /**
+     * @description How long the Cloudflare edge network should cache the response.
+     * @type object | undefined
+     */
+    edge_ttl?: RulesetsSetCacheSettingsEdgeTTL;
+    /**
+     * @description Whether Cloudflare will aim to strictly adhere to RFC 7234.
+     * @example true
+     * @type boolean | undefined
+     */
+    origin_cache_control?: RulesetsSetCacheSettingsOriginCacheControl;
+    /**
+     * @description Whether to generate Cloudflare error pages for issues from the origin server.
+     * @example true
+     * @type boolean | undefined
+     */
+    origin_error_page_passthru?: RulesetsSetCacheSettingsOriginErrorPagePassthru;
+    /**
+     * @description Controls whether Cloudflare fetches a large asset from the origin as a series of range requests instead of one whole-body request.
+     * @type object | undefined
+     */
+    origin_range_requests?: RulesetsSetCacheSettingsOriginRangeRequests;
+    /**
+     * @description A timeout value between two successive read operations to use for your origin server. Historically, the timeout value between two read options from Cloudflare to an origin server is 100 seconds. If you are attempting to reduce HTTP 524 errors because of timeouts from an origin server, try increasing this timeout value.
+     * @minimum 100
+     * @maximum 6000
+     * @example 900
+     * @type integer | undefined
+     */
+    read_timeout?: RulesetsSetCacheSettingsReadTimeout;
+    /**
+     * @description Whether Cloudflare should respect strong ETag (entity tag) headers. If false, Cloudflare converts strong ETag headers to weak ETag headers.
+     * @example true
+     * @type boolean | undefined
+     */
+    respect_strong_etags?: RulesetsSetCacheSettingsRespectStrongEtags;
+    /**
+     * @description When to serve stale content from cache.
+     * @type object | undefined
+     */
+    serve_stale?: RulesetsSetCacheSettingsServeStale;
+    /**
+     * @description Configuration for shared dictionary compression. When set, Cloudflare injects Use-As-Dictionary headers on matching cacheable responses.
+     * @type object | undefined
+     */
+    shared_dictionary?: RulesetsSetCacheSettingsSharedDictionary;
+    /**
+     * @description Whether to strip ETag headers from the origin response before caching.
+     * @example true
+     * @type boolean | undefined
+     */
+    strip_etags?: RulesetsSetCacheSettingsStripETags;
+    /**
+     * @description Whether to strip Last-Modified headers from the origin response before caching.
+     * @example true
+     * @type boolean | undefined
+     */
+    strip_last_modified?: RulesetsSetCacheSettingsStripLastModified;
+    /**
+     * @description Whether to strip Set-Cookie headers from the origin response before caching.
+     * @example true
+     * @type boolean | undefined
+     */
+    strip_set_cookie?: RulesetsSetCacheSettingsStripSetCookie;
+    /**
+     * @description Controls how cached responses vary based on request headers. `default` is required by the API and applies to any Vary response header that does not have a per-header override.
+     * @type object | undefined
+     */
+    vary?: RulesetsSetCacheSettingsVary;
+  };
+  /**
+   * @example Configure settings for how the response is cached.
+   * @type string | undefined
+   */
+  description?: string;
+};
+
+export const rulesetsSetCacheTagsOperation = {
+  add: 'add',
+  remove: 'remove',
+  set: 'set',
+} as const;
+
+export type RulesetsSetCacheTagsOperationKey = (typeof rulesetsSetCacheTagsOperation)[keyof typeof rulesetsSetCacheTagsOperation];
+
+/**
+ * @description A list of cache tag values.
+ * @type array
+ */
+export type RulesetsSetCacheTagsValues = string[];
+
+/**
+ * @description An expression that evaluates to an array of cache tag values.
+ * @minLength 1
+ * @example http.request.uri.path.extension
+ * @type string
+ */
+export type RulesetsSetCacheTagsExpression = string;
+
+export type RulesetsSetCacheTagsRule = RulesetsRuleSchema & {
+  action?: 'set_cache_tags';
+  action_parameters?: {
+    operation: RulesetsSetCacheTagsOperationKey & 'add';
+    /**
+     * @description A list of cache tag values.
+     * @type array
+     */
+    values: RulesetsSetCacheTagsValues;
+  } | {
+    /**
+     * @description An expression that evaluates to an array of cache tag values.
+     * @minLength 1
+     * @example http.request.uri.path.extension
+     * @type string
+     */
+    expression: RulesetsSetCacheTagsExpression;
+    operation: RulesetsSetCacheTagsOperationKey & 'add';
+  } | {
+    operation: RulesetsSetCacheTagsOperationKey & 'remove';
+    /**
+     * @description A list of cache tag values.
+     * @type array
+     */
+    values: RulesetsSetCacheTagsValues;
+  } | {
+    /**
+     * @description An expression that evaluates to an array of cache tag values.
+     * @minLength 1
+     * @example http.request.uri.path.extension
+     * @type string
+     */
+    expression: RulesetsSetCacheTagsExpression;
+    operation: RulesetsSetCacheTagsOperationKey & 'remove';
+  } | {
+    operation: RulesetsSetCacheTagsOperationKey & 'set';
+    /**
+     * @description A list of cache tag values.
+     * @type array
+     */
+    values: RulesetsSetCacheTagsValues;
+  } | {
+    /**
+     * @description An expression that evaluates to an array of cache tag values.
+     * @minLength 1
+     * @example http.request.uri.path.extension
+     * @type string
+     */
+    expression: RulesetsSetCacheTagsExpression;
+    operation: RulesetsSetCacheTagsOperationKey & 'set';
+  };
+  /**
+   * @example Modify the cache tags associated with the response.
+   * @type string | undefined
+   */
+  description?: string;
+};
+
+/**
+ * @description Which file extensions to minify automatically.
+ * @type object
+ */
+export type RulesetsSetConfigAutominify = {
+  /**
+   * @description Whether to minify CSS files.
+   * @default false
+   * @example true
+   * @type boolean | undefined
+   */
+  css?: boolean;
+  /**
+   * @description Whether to minify HTML files.
+   * @default false
+   * @example true
+   * @type boolean | undefined
+   */
+  html?: boolean;
+  /**
+   * @description Whether to minify JavaScript files.
+   * @default false
+   * @example true
+   * @type boolean | undefined
+   */
+  js?: boolean;
+};
+
+export const rulesetsSetConfigRuleActionParametersPolishEnum = {
+  off: 'off',
+  lossless: 'lossless',
+  lossy: 'lossy',
+  webp: 'webp',
+} as const;
+
+export type RulesetsSetConfigRuleActionParametersPolishEnumKey = (typeof rulesetsSetConfigRuleActionParametersPolishEnum)[keyof typeof rulesetsSetConfigRuleActionParametersPolishEnum];
+
+export const rulesetsSetConfigRuleActionParametersRequestBodyBufferingEnum = {
+  none: 'none',
+  standard: 'standard',
+  full: 'full',
+} as const;
+
+export type RulesetsSetConfigRuleActionParametersRequestBodyBufferingEnumKey = (typeof rulesetsSetConfigRuleActionParametersRequestBodyBufferingEnum)[keyof typeof rulesetsSetConfigRuleActionParametersRequestBodyBufferingEnum];
+
+export const rulesetsSetConfigRuleActionParametersResponseBodyBufferingEnum = {
+  none: 'none',
+  standard: 'standard',
+} as const;
+
+export type RulesetsSetConfigRuleActionParametersResponseBodyBufferingEnumKey = (typeof rulesetsSetConfigRuleActionParametersResponseBodyBufferingEnum)[keyof typeof rulesetsSetConfigRuleActionParametersResponseBodyBufferingEnum];
+
+export const rulesetsSetConfigRuleActionParametersSecurityLevelEnum = {
+  off: 'off',
+  essentially_off: 'essentially_off',
+  low: 'low',
+  medium: 'medium',
+  high: 'high',
+  under_attack: 'under_attack',
+} as const;
+
+export type RulesetsSetConfigRuleActionParametersSecurityLevelEnumKey = (typeof rulesetsSetConfigRuleActionParametersSecurityLevelEnum)[keyof typeof rulesetsSetConfigRuleActionParametersSecurityLevelEnum];
+
+export const rulesetsSetConfigRuleActionParametersSslEnum = {
+  off: 'off',
+  flexible: 'flexible',
+  full: 'full',
+  strict: 'strict',
+  origin_pull: 'origin_pull',
+} as const;
+
+export type RulesetsSetConfigRuleActionParametersSslEnumKey = (typeof rulesetsSetConfigRuleActionParametersSslEnum)[keyof typeof rulesetsSetConfigRuleActionParametersSslEnum];
+
+export type RulesetsSetConfigRule = RulesetsRuleSchema & {
+  action?: 'set_config';
+  action_parameters?: {
+    /**
+     * @description Whether to enable Automatic HTTPS Rewrites.
+     * @example true
+     * @type boolean | undefined
+     */
+    automatic_https_rewrites?: boolean;
+    /**
+     * @description Which file extensions to minify automatically.
+     * @type object | undefined
+     */
+    autominify?: RulesetsSetConfigAutominify;
+    /**
+     * @description Whether to enable Browser Integrity Check (BIC).
+     * @example true
+     * @type boolean | undefined
+     */
+    bic?: boolean;
+    /**
+     * @description Whether to enable content conversion (e.g., HTML to Markdown).
+     * @example true
+     * @type boolean | undefined
+     */
+    content_converter?: boolean;
+    /**
+     * @description Whether to disable Cloudflare Apps.
+     * @deprecated
+     * @type boolean | undefined
+     */
+    disable_apps?: true;
+    /**
+     * @description Whether to disable Pay Per Crawl.
+     * @type boolean | undefined
+     */
+    disable_pay_per_crawl?: true;
+    /**
+     * @description Whether to disable Real User Monitoring (RUM).
+     * @type boolean | undefined
+     */
+    disable_rum?: true;
+    /**
+     * @description Whether to disable Zaraz.
+     * @type boolean | undefined
+     */
+    disable_zaraz?: true;
+    /**
+     * @description Whether to enable Email Obfuscation.
+     * @example true
+     * @type boolean | undefined
+     */
+    email_obfuscation?: boolean;
+    /**
+     * @description Whether to enable Cloudflare Fonts.
+     * @example true
+     * @type boolean | undefined
+     */
+    fonts?: boolean;
+    /**
+     * @description Whether to enable Hotlink Protection.
+     * @example true
+     * @type boolean | undefined
+     */
+    hotlink_protection?: boolean;
+    /**
+     * @description Whether to enable Mirage.
+     * @deprecated
+     * @example true
+     * @type boolean | undefined
+     */
+    mirage?: boolean;
+    /**
+     * @description Whether to enable Opportunistic Encryption.
+     * @example true
+     * @type boolean | undefined
+     */
+    opportunistic_encryption?: boolean;
+    /**
+     * @description The Polish level to configure.
+     * @example off
+     * @type string | undefined
+     */
+    polish?: RulesetsSetConfigRuleActionParametersPolishEnumKey;
+    /**
+     * @description Whether to redirect verified AI training crawlers to canonical URLs found in the HTML response.
+     * @example true
+     * @type boolean | undefined
+     */
+    redirects_for_ai_training?: boolean;
+    /**
+     * @description The request body buffering mode.
+     * @example standard
+     * @type string | undefined
+     */
+    request_body_buffering?: RulesetsSetConfigRuleActionParametersRequestBodyBufferingEnumKey;
+    /**
+     * @description The response body buffering mode.
+     * @example standard
+     * @type string | undefined
+     */
+    response_body_buffering?: RulesetsSetConfigRuleActionParametersResponseBodyBufferingEnumKey;
+    /**
+     * @description Whether to enable Rocket Loader.
+     * @example true
+     * @type boolean | undefined
+     */
+    rocket_loader?: boolean;
+    /**
+     * @description The Security Level to configure.
+     * @example off
+     * @type string | undefined
+     */
+    security_level?: RulesetsSetConfigRuleActionParametersSecurityLevelEnumKey;
+    /**
+     * @description Whether to enable Server-Side Excludes.
+     * @example true
+     * @type boolean | undefined
+     */
+    server_side_excludes?: boolean;
+    /**
+     * @description The SSL level to configure.
+     * @example off
+     * @type string | undefined
+     */
+    ssl?: RulesetsSetConfigRuleActionParametersSslEnumKey;
+    /**
+     * @description Whether to enable Signed Exchanges (SXG).
+     * @deprecated
+     * @example true
+     * @type boolean | undefined
+     */
+    sxg?: boolean;
+    /**
+     * @description Whether to serve the WebMCP bridge script, which exposes the page's tools to browser AI agents.
+     * @example true
+     * @type boolean | undefined
+     */
+    webmcp_enabled?: boolean;
+    /**
+     * @description Bundled WebMCP tool packs to activate for matching requests. An empty array disables all packs. Omitting this parameter leaves the pack selection unchanged. Does not enable the WebMCP bridge itself.
+     * @example ["c2pa","mcp-server-client"]
+     * @type array | undefined
+     */
+    webmcp_packs?: string[];
+  };
+  /**
+   * @example Configure settings for the request and response.
+   * @type string | undefined
+   */
+  description?: string;
+};
+
+export const rulesetsSkipPhase = {
+  current: 'current',
+} as const;
+
+export type RulesetsSkipPhaseKey = (typeof rulesetsSkipPhase)[keyof typeof rulesetsSkipPhase];
+
+export const rulesetsRulesetPhase = {
+  ddos_l4: 'ddos_l4',
+  ddos_l7: 'ddos_l7',
+  http_config_settings: 'http_config_settings',
+  http_custom_errors: 'http_custom_errors',
+  http_log_custom_fields: 'http_log_custom_fields',
+  http_ratelimit: 'http_ratelimit',
+  http_request_cache_settings: 'http_request_cache_settings',
+  http_request_dynamic_redirect: 'http_request_dynamic_redirect',
+  http_request_firewall_custom: 'http_request_firewall_custom',
+  http_request_firewall_managed: 'http_request_firewall_managed',
+  http_request_late_transform: 'http_request_late_transform',
+  http_request_origin: 'http_request_origin',
+  http_request_redirect: 'http_request_redirect',
+  http_request_sanitize: 'http_request_sanitize',
+  http_request_sbfm: 'http_request_sbfm',
+  http_request_transform: 'http_request_transform',
+  http_response_cache_settings: 'http_response_cache_settings',
+  http_response_compression: 'http_response_compression',
+  http_response_firewall_custom: 'http_response_firewall_custom',
+  http_response_firewall_managed: 'http_response_firewall_managed',
+  http_response_headers_transform: 'http_response_headers_transform',
+  magic_transit: 'magic_transit',
+  magic_transit_ids_managed: 'magic_transit_ids_managed',
+  magic_transit_managed: 'magic_transit_managed',
+  magic_transit_ratelimit: 'magic_transit_ratelimit',
+} as const;
+
+export type RulesetsRulesetPhaseKey = (typeof rulesetsRulesetPhase)[keyof typeof rulesetsRulesetPhase];
+
+/**
+ * @description A list of phases to skip the execution of. This option is incompatible with the rulesets option.
+ * @type array
+ */
+export type RulesetsSkipPhases = (RulesetsRulesetPhaseKey & string)[];
+
+export const rulesetsSkipProductsEnum = {
+  bic: 'bic',
+  hot: 'hot',
+  rateLimit: 'rateLimit',
+  securityLevel: 'securityLevel',
+  uaBlock: 'uaBlock',
+  waf: 'waf',
+  zoneLockdown: 'zoneLockdown',
+} as const;
+
+export type RulesetsSkipProductsEnumKey = (typeof rulesetsSkipProductsEnum)[keyof typeof rulesetsSkipProductsEnum];
+
+/**
+ * @description A list of legacy security products to skip the execution of.
+ * @type array
+ */
+export type RulesetsSkipProducts = RulesetsSkipProductsEnumKey[];
+
+/**
+ * @description A mapping of ruleset IDs to a list of rule IDs in that ruleset to skip the execution of. This option is incompatible with the ruleset option.
+ * @example {"4814384a9e5d4991b9815dcfc25d2f1f":["8ac8bc2a661e475d940980f9317f28e1"]}
+ * @type object
+ */
+export type RulesetsSkipRules = {
+  [key: string]: (RulesetsRuleId & string)[];
+};
+
+export const rulesetsSkipRuleset = {
+  current: 'current',
+} as const;
+
+export type RulesetsSkipRulesetKey = (typeof rulesetsSkipRuleset)[keyof typeof rulesetsSkipRuleset];
+
+/**
+ * @description A list of ruleset IDs to skip the execution of. This option is incompatible with the ruleset and phases options.
+ * @type array
+ */
+export type RulesetsSkipRulesets = (RulesetsRulesetId & string)[];
+
+export type RulesetsSkipRule = RulesetsRuleSchema & {
+  action?: 'skip';
+  action_parameters?: {
+    /**
+     * @description A phase to skip the execution of. This option is only compatible with the products option.
+     * @type string | undefined
+     */
+    phase?: RulesetsSkipPhaseKey;
+    /**
+     * @description A list of phases to skip the execution of. This option is incompatible with the rulesets option.
+     * @type array | undefined
+     */
+    phases?: RulesetsSkipPhases;
+    /**
+     * @description A list of legacy security products to skip the execution of.
+     * @type array | undefined
+     */
+    products?: RulesetsSkipProducts;
+    /**
+     * @description A mapping of ruleset IDs to a list of rule IDs in that ruleset to skip the execution of. This option is incompatible with the ruleset option.
+     * @example {"4814384a9e5d4991b9815dcfc25d2f1f":["8ac8bc2a661e475d940980f9317f28e1"]}
+     * @type object | undefined
+     */
+    rules?: RulesetsSkipRules;
+    /**
+     * @description A ruleset to skip the execution of. This option is incompatible with the rulesets option.
+     * @type string | undefined
+     */
+    ruleset?: RulesetsSkipRulesetKey;
+    /**
+     * @description A list of ruleset IDs to skip the execution of. This option is incompatible with the ruleset and phases options.
+     * @type array | undefined
+     */
+    rulesets?: RulesetsSkipRulesets;
+  };
+  /**
+   * @example Skip executing rulesets, rules, phases, and other products.
+   * @type string | undefined
+   */
+  description?: string;
+};
+
+export type RulesetsTransformResponseHTMLRule = RulesetsRuleSchema & {
+  action?: 'transform_response_html';
+  action_parameters?: {
+    /**
+     * @description Enables the link maze transformation on the response.
+     * @type object
+     */
+    link_maze: object;
+  };
+  /**
+   * @example Apply a HTML transformation to the response.
+   * @type string | undefined
+   */
+  description?: string;
+};
+
+export type RulesetsRequestRule = RulesetsBlockRule & {
+  action: 'block';
+} | RulesetsChallengeRule & {
+  action: 'challenge';
+} | RulesetsCompressResponseRule & {
+  action: 'compress_response';
+} | RulesetsDDoSDynamicRule & {
+  action: 'ddos_dynamic';
+} | RulesetsExecuteRule & {
+  action: 'execute';
+} | RulesetsForceConnectionCloseRule & {
+  action: 'force_connection_close';
+} | RulesetsJsChallengeRule & {
+  action: 'js_challenge';
+} | RulesetsLogRule & {
+  action: 'log';
+} | RulesetsLogCustomFieldRule & {
+  action: 'log_custom_field';
+} | RulesetsManagedChallengeRule & {
+  action: 'managed_challenge';
+} | RulesetsRedirectRule & {
+  action: 'redirect';
+} | RulesetsRewriteRule & {
+  action: 'rewrite';
+} | RulesetsRouteRule & {
+  action: 'route';
+} | RulesetsScoreRule & {
+  action: 'score';
+} | RulesetsServeErrorRule & {
+  action: 'serve_error';
+} | RulesetsSetCacheControlRule & {
+  action: 'set_cache_control';
+} | RulesetsSetCacheSettingsRule & {
+  action: 'set_cache_settings';
+} | RulesetsSetCacheTagsRule & {
+  action: 'set_cache_tags';
+} | RulesetsSetConfigRule & {
+  action: 'set_config';
+} | RulesetsSkipRule & {
+  action: 'skip';
+} | RulesetsTransformResponseHTMLRule & {
+  action: 'transform_response_html';
+};
+
+/**
+ * @description The list of rules in the ruleset.
+ * @default []
+ * @type array
+ */
+export type RulesetsRequestRules = RulesetsRequestRule[];
+
+export type RulesetsResponseRule = RulesetsRequestRule & {
+  action: string;
+  enabled: boolean;
+  expression: string;
+  id: string;
+  ref: string;
+};
+
+/**
+ * @description The list of rules in the ruleset.
+ * @type array
+ */
+export type RulesetsResponseRules = RulesetsResponseRule[];
+
+/**
+ * @description Information to navigate the results.
+ * @type object
+ */
+export type RulesetsResultInfo = {
+  /**
+   * @description The set of cursors.
+   * @type object | undefined
+   */
+  cursors?: {
+    after: RulesetsCursor & string;
+  };
+};
+
+/**
+ * @description An object configuring where the rule will be placed.
+ * @type object
+ */
+export type RulesetsRulePosition = object;
+
+/**
+ * @description The version of the ruleset.
+ * @pattern ^[0-9]+$
+ * @example 1
+ * @type string
+ */
+export type RulesetsRulesetVersion = string;
+
+/**
+ * @description A ruleset object.
+ * @type object
+ */
+export type RulesetsRulesetSchema = {
+  /**
+   * @description An informative description of the ruleset.
+   * @default ''
+   * @example A description for my ruleset.
+   * @type string | undefined
+   */
+  description?: string;
+  id: RulesetsRulesetId & string;
+  /**
+   * @description The timestamp of when the ruleset was last modified.
+   *
+   * Format: `date-time`
+   * @example 2000-01-01T00:00:00Z
+   * @type string
+   */
+  readonly last_updated: string;
+  /**
+   * @description The human-readable name of the ruleset.
+   * @minLength 1
+   * @example My ruleset
+   * @type string | undefined
+   */
+  name?: string;
+  readonly version: RulesetsRulesetVersion & string;
+};
+
+export const rulesetsRulesetKind = {
+  managed: 'managed',
+  custom: 'custom',
+  root: 'root',
+  zone: 'zone',
+} as const;
+
+export type RulesetsRulesetKindKey = (typeof rulesetsRulesetKind)[keyof typeof rulesetsRulesetKind];
+
+/**
+ * @description The unique ID of the zone.
+ * @pattern ^[0-9a-f]{32}$
+ * @example 9f1839b6152d298aca64c4e906b6d074
+ * @type string
+ */
+export type RulesetsZoneId = string;
+
 export type WorkersDomain = {
   /**
    * @description ID of the TLS certificate issued for the domain.
@@ -5317,6 +7725,547 @@ export type DnsRecordsForAZoneUpdateDnsRecordResponses = {
  * @description Union of all possible responses
  */
 export type DnsRecordsForAZoneUpdateDnsRecordResponse = DnsRecordsForAZoneUpdateDnsRecordStatus200;
+
+export type ListZoneRulesetsPath = {
+  /**
+   * @description The unique ID of the zone.
+   * @pattern ^[0-9a-f]{32}$
+   * @example 9f1839b6152d298aca64c4e906b6d074
+   * @type string
+   */
+  zone_id: RulesetsZoneId;
+};
+
+export type ListZoneRulesetsQuery = {
+  /**
+   * @description The cursor to use for the next page.
+   * @minLength 1
+   * @example dGhpc2lzYW5leGFtcGxlCg
+   * @type string | undefined
+   */
+  cursor?: RulesetsCursor;
+  /**
+   * @description The number of rulesets to return per page.
+   * @minimum 1
+   * @maximum 50
+   * @example 3
+   * @type integer | undefined
+   */
+  per_page?: RulesetsPerPage;
+};
+
+export type ListZoneRulesetsStatus200 = RulesetsResponse & {
+  errors?: RulesetsMessage[];
+  /**
+   * @description A list of rulesets. The returned information will not include the rules in each ruleset.
+   * @type array | undefined
+   */
+  result?: (RulesetsRulesetSchema & {
+    /**
+     * @description The kind of the ruleset.
+     * @example root
+     * @type string
+     */
+    kind: RulesetsRulesetKindKey;
+    name: string;
+    /**
+     * @description The phase of the ruleset.
+     * @example http_request_firewall_custom
+     * @type string
+     */
+    phase: RulesetsRulesetPhaseKey;
+  })[];
+  /**
+   * @description Information to navigate the results.
+   * @type object | undefined
+   */
+  result_info?: RulesetsResultInfo;
+  success?: true;
+};
+
+export type ListZoneRulesetsStatus4XX = RulesetsResponse & {
+  result?: null;
+  success?: false;
+};
+
+export type ListZoneRulesetsOptions = {
+  body?: never;
+  path: ListZoneRulesetsPath;
+  query?: ListZoneRulesetsQuery;
+  headers?: never;
+};
+
+export type ListZoneRulesetsResponses = {
+  '200': ListZoneRulesetsStatus200;
+  '4XX': ListZoneRulesetsStatus4XX;
+};
+
+/**
+ * @description Union of all possible responses
+ */
+export type ListZoneRulesetsResponse = ListZoneRulesetsStatus200;
+
+export type CreateZoneRulesetPath = {
+  /**
+   * @description The unique ID of the zone.
+   * @pattern ^[0-9a-f]{32}$
+   * @example 9f1839b6152d298aca64c4e906b6d074
+   * @type string
+   */
+  zone_id: RulesetsZoneId;
+};
+
+export type CreateZoneRulesetQuery = {
+  /**
+   * @description Validates the request without persisting changes when set to `true`. Responses that normally return 200 return `result: null`; endpoints that normally return 204 continue to return 204.
+   * @default false
+   * @type boolean | undefined
+   */
+  dry_run?: boolean;
+};
+
+export type CreateZoneRulesetStatus200 = RulesetsResponse & {
+  errors?: RulesetsMessage[];
+  result?: RulesetsRulesetSchema & {
+    /**
+     * @description The kind of the ruleset.
+     * @example root
+     * @type string
+     */
+    kind: RulesetsRulesetKindKey;
+    name: string;
+    /**
+     * @description The phase of the ruleset.
+     * @example http_request_firewall_custom
+     * @type string
+     */
+    phase: RulesetsRulesetPhaseKey;
+    /**
+     * @description The list of rules in the ruleset.
+     * @type array
+     */
+    rules: RulesetsResponseRules;
+  } | null;
+  success?: true;
+};
+
+export type CreateZoneRulesetStatus4XX = RulesetsResponse & {
+  result?: null;
+  success?: false;
+};
+
+export type CreateZoneRulesetBody = RulesetsRulesetSchema & {
+  /**
+   * @description The kind of the ruleset.
+   * @example root
+   * @type string | undefined
+   */
+  kind?: RulesetsRulesetKindKey;
+  /**
+   * @description The phase of the ruleset.
+   * @example http_request_firewall_custom
+   * @type string | undefined
+   */
+  phase?: RulesetsRulesetPhaseKey;
+  /**
+   * @description The list of rules in the ruleset.
+   * @default []
+   * @type array | undefined
+   */
+  rules?: RulesetsRequestRules;
+} & {
+  /**
+   * @description The human-readable name of the ruleset.
+   * @minLength 1
+   * @example My ruleset
+   * @type string
+   */
+  name: string;
+} & {
+  /**
+   * @description The kind of the ruleset.
+   * @example root
+   * @type string
+   */
+  kind: RulesetsRulesetKindKey;
+} & {
+  /**
+   * @description The phase of the ruleset.
+   * @example http_request_firewall_custom
+   * @type string
+   */
+  phase: RulesetsRulesetPhaseKey;
+};
+
+export type CreateZoneRulesetOptions = {
+  body: CreateZoneRulesetBody;
+  path: CreateZoneRulesetPath;
+  query?: CreateZoneRulesetQuery;
+  headers?: never;
+};
+
+export type CreateZoneRulesetResponses = {
+  '200': CreateZoneRulesetStatus200;
+  '4XX': CreateZoneRulesetStatus4XX;
+};
+
+/**
+ * @description Union of all possible responses
+ */
+export type CreateZoneRulesetResponse = CreateZoneRulesetStatus200;
+
+export type GetZoneRulesetPath = {
+  /**
+   * @description The unique ID of the ruleset.
+   * @pattern ^[0-9a-f]{32}$
+   * @example 2f2feab2026849078ba485f918791bdc
+   * @type string
+   */
+  ruleset_id: RulesetsRulesetId;
+  /**
+   * @description The unique ID of the zone.
+   * @pattern ^[0-9a-f]{32}$
+   * @example 9f1839b6152d298aca64c4e906b6d074
+   * @type string
+   */
+  zone_id: RulesetsZoneId;
+};
+
+export type GetZoneRulesetStatus200 = RulesetsResponse & {
+  errors?: RulesetsMessage[];
+  result?: RulesetsRulesetSchema & {
+    /**
+     * @description The kind of the ruleset.
+     * @example root
+     * @type string
+     */
+    kind: RulesetsRulesetKindKey;
+    name: string;
+    /**
+     * @description The phase of the ruleset.
+     * @example http_request_firewall_custom
+     * @type string
+     */
+    phase: RulesetsRulesetPhaseKey;
+    /**
+     * @description The list of rules in the ruleset.
+     * @type array
+     */
+    rules: RulesetsResponseRules;
+  };
+  success?: true;
+};
+
+export type GetZoneRulesetStatus4XX = RulesetsResponse & {
+  result?: null;
+  success?: false;
+};
+
+export type GetZoneRulesetOptions = {
+  body?: never;
+  path: GetZoneRulesetPath;
+  query?: never;
+  headers?: never;
+};
+
+export type GetZoneRulesetResponses = {
+  '200': GetZoneRulesetStatus200;
+  '4XX': GetZoneRulesetStatus4XX;
+};
+
+/**
+ * @description Union of all possible responses
+ */
+export type GetZoneRulesetResponse = GetZoneRulesetStatus200;
+
+export type CreateZoneRulesetRulePath = {
+  /**
+   * @description The unique ID of the ruleset.
+   * @pattern ^[0-9a-f]{32}$
+   * @example 2f2feab2026849078ba485f918791bdc
+   * @type string
+   */
+  ruleset_id: RulesetsRulesetId;
+  /**
+   * @description The unique ID of the zone.
+   * @pattern ^[0-9a-f]{32}$
+   * @example 9f1839b6152d298aca64c4e906b6d074
+   * @type string
+   */
+  zone_id: RulesetsZoneId;
+};
+
+export type CreateZoneRulesetRuleQuery = {
+  /**
+   * @description Validates the request without persisting changes when set to `true`. Responses that normally return 200 return `result: null`; endpoints that normally return 204 continue to return 204.
+   * @default false
+   * @type boolean | undefined
+   */
+  dry_run?: boolean;
+};
+
+export type CreateZoneRulesetRuleStatus200 = RulesetsResponse & {
+  errors?: RulesetsMessage[];
+  result?: RulesetsRulesetSchema & {
+    /**
+     * @description The kind of the ruleset.
+     * @example root
+     * @type string
+     */
+    kind: RulesetsRulesetKindKey;
+    name: string;
+    /**
+     * @description The phase of the ruleset.
+     * @example http_request_firewall_custom
+     * @type string
+     */
+    phase: RulesetsRulesetPhaseKey;
+    /**
+     * @description The list of rules in the ruleset.
+     * @type array
+     */
+    rules: RulesetsResponseRules;
+  } | null;
+  success?: true;
+};
+
+export type CreateZoneRulesetRuleStatus4XX = RulesetsResponse & {
+  result?: null;
+  success?: false;
+};
+
+export type CreateZoneRulesetRuleBody = RulesetsRequestRule & {
+  position?: RulesetsRulePosition & {
+    /**
+     * @description The ID of another rule to place the rule before. An empty value causes the rule to be placed at the top.
+     * @pattern ^[0-9a-f]{32}$
+     * @example da5e8e506c8e7877fe06cdf4c41add54
+     * @type string | undefined
+     */
+    before?: string;
+  } | RulesetsRulePosition & {
+    /**
+     * @description The ID of another rule to place the rule after. An empty value causes the rule to be placed at the bottom.
+     * @pattern ^[0-9a-f]{32}$
+     * @example 5bccdbb2a5142cd25cad8591255bd209
+     * @type string | undefined
+     */
+    after?: string;
+  } | RulesetsRulePosition & {
+    /**
+     * @description An index at which to place the rule, where index 1 is the first rule.
+     * @minimum 1
+     * @example 1
+     * @type integer | undefined
+     */
+    index?: number;
+  };
+};
+
+export type CreateZoneRulesetRuleOptions = {
+  body: CreateZoneRulesetRuleBody;
+  path: CreateZoneRulesetRulePath;
+  query?: CreateZoneRulesetRuleQuery;
+  headers?: never;
+};
+
+export type CreateZoneRulesetRuleResponses = {
+  '200': CreateZoneRulesetRuleStatus200;
+  '4XX': CreateZoneRulesetRuleStatus4XX;
+};
+
+/**
+ * @description Union of all possible responses
+ */
+export type CreateZoneRulesetRuleResponse = CreateZoneRulesetRuleStatus200;
+
+export type DeleteZoneRulesetRulePath = {
+  /**
+   * @description The unique ID of the rule.
+   * @pattern ^[0-9a-f]{32}$
+   * @example 3a03d665bac047339bb530ecb439a90d
+   * @type string
+   */
+  rule_id: RulesetsRuleId;
+  /**
+   * @description The unique ID of the ruleset.
+   * @pattern ^[0-9a-f]{32}$
+   * @example 2f2feab2026849078ba485f918791bdc
+   * @type string
+   */
+  ruleset_id: RulesetsRulesetId;
+  /**
+   * @description The unique ID of the zone.
+   * @pattern ^[0-9a-f]{32}$
+   * @example 9f1839b6152d298aca64c4e906b6d074
+   * @type string
+   */
+  zone_id: RulesetsZoneId;
+};
+
+export type DeleteZoneRulesetRuleQuery = {
+  /**
+   * @description Validates the request without persisting changes when set to `true`. Responses that normally return 200 return `result: null`; endpoints that normally return 204 continue to return 204.
+   * @default false
+   * @type boolean | undefined
+   */
+  dry_run?: boolean;
+};
+
+export type DeleteZoneRulesetRuleStatus200 = RulesetsResponse & {
+  errors?: RulesetsMessage[];
+  result?: RulesetsRulesetSchema & {
+    /**
+     * @description The kind of the ruleset.
+     * @example root
+     * @type string
+     */
+    kind: RulesetsRulesetKindKey;
+    name: string;
+    /**
+     * @description The phase of the ruleset.
+     * @example http_request_firewall_custom
+     * @type string
+     */
+    phase: RulesetsRulesetPhaseKey;
+    /**
+     * @description The list of rules in the ruleset.
+     * @type array
+     */
+    rules: RulesetsResponseRules;
+  } | null;
+  success?: true;
+};
+
+export type DeleteZoneRulesetRuleStatus4XX = RulesetsResponse & {
+  result?: null;
+  success?: false;
+};
+
+export type DeleteZoneRulesetRuleOptions = {
+  body?: never;
+  path: DeleteZoneRulesetRulePath;
+  query?: DeleteZoneRulesetRuleQuery;
+  headers?: never;
+};
+
+export type DeleteZoneRulesetRuleResponses = {
+  '200': DeleteZoneRulesetRuleStatus200;
+  '4XX': DeleteZoneRulesetRuleStatus4XX;
+};
+
+/**
+ * @description Union of all possible responses
+ */
+export type DeleteZoneRulesetRuleResponse = DeleteZoneRulesetRuleStatus200;
+
+export type UpdateZoneRulesetRulePath = {
+  /**
+   * @description The unique ID of the rule.
+   * @pattern ^[0-9a-f]{32}$
+   * @example 3a03d665bac047339bb530ecb439a90d
+   * @type string
+   */
+  rule_id: RulesetsRuleId;
+  /**
+   * @description The unique ID of the ruleset.
+   * @pattern ^[0-9a-f]{32}$
+   * @example 2f2feab2026849078ba485f918791bdc
+   * @type string
+   */
+  ruleset_id: RulesetsRulesetId;
+  /**
+   * @description The unique ID of the zone.
+   * @pattern ^[0-9a-f]{32}$
+   * @example 9f1839b6152d298aca64c4e906b6d074
+   * @type string
+   */
+  zone_id: RulesetsZoneId;
+};
+
+export type UpdateZoneRulesetRuleQuery = {
+  /**
+   * @description Validates the request without persisting changes when set to `true`. Responses that normally return 200 return `result: null`; endpoints that normally return 204 continue to return 204.
+   * @default false
+   * @type boolean | undefined
+   */
+  dry_run?: boolean;
+};
+
+export type UpdateZoneRulesetRuleStatus200 = RulesetsResponse & {
+  errors?: RulesetsMessage[];
+  result?: RulesetsRulesetSchema & {
+    /**
+     * @description The kind of the ruleset.
+     * @example root
+     * @type string
+     */
+    kind: RulesetsRulesetKindKey;
+    name: string;
+    /**
+     * @description The phase of the ruleset.
+     * @example http_request_firewall_custom
+     * @type string
+     */
+    phase: RulesetsRulesetPhaseKey;
+    /**
+     * @description The list of rules in the ruleset.
+     * @type array
+     */
+    rules: RulesetsResponseRules;
+  } | null;
+  success?: true;
+};
+
+export type UpdateZoneRulesetRuleStatus4XX = RulesetsResponse & {
+  result?: null;
+  success?: false;
+};
+
+export type UpdateZoneRulesetRuleBody = RulesetsRequestRule & {
+  position?: RulesetsRulePosition & {
+    /**
+     * @description The ID of another rule to place the rule before. An empty value causes the rule to be placed at the top.
+     * @pattern ^[0-9a-f]{32}$
+     * @example da5e8e506c8e7877fe06cdf4c41add54
+     * @type string | undefined
+     */
+    before?: string;
+  } | RulesetsRulePosition & {
+    /**
+     * @description The ID of another rule to place the rule after. An empty value causes the rule to be placed at the bottom.
+     * @pattern ^[0-9a-f]{32}$
+     * @example 5bccdbb2a5142cd25cad8591255bd209
+     * @type string | undefined
+     */
+    after?: string;
+  } | RulesetsRulePosition & {
+    /**
+     * @description An index at which to place the rule, where index 1 is the first rule.
+     * @minimum 1
+     * @example 1
+     * @type integer | undefined
+     */
+    index?: number;
+  };
+};
+
+export type UpdateZoneRulesetRuleOptions = {
+  body: UpdateZoneRulesetRuleBody;
+  path: UpdateZoneRulesetRulePath;
+  query?: UpdateZoneRulesetRuleQuery;
+  headers?: never;
+};
+
+export type UpdateZoneRulesetRuleResponses = {
+  '200': UpdateZoneRulesetRuleStatus200;
+  '4XX': UpdateZoneRulesetRuleStatus4XX;
+};
+
+/**
+ * @description Union of all possible responses
+ */
+export type UpdateZoneRulesetRuleResponse = UpdateZoneRulesetRuleStatus200;
 
 export type TagsZoneGetPath = {
   /**

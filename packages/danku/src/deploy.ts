@@ -4,6 +4,7 @@ import { CliError } from "./error.ts";
 import { loadProject } from "./project.ts";
 import { D1 } from "./resources/cloudflare/d1.ts";
 import { DnsRecord } from "./resources/cloudflare/dns-record.ts";
+import { RedirectRule } from "./resources/cloudflare/redirect-rule.ts";
 import { Worker } from "./resources/cloudflare/worker.ts";
 import { Zone } from "./resources/cloudflare/zone.ts";
 import { type Kind, Resource, resources } from "./resources/resource.ts";
@@ -16,6 +17,7 @@ const kinds: (Kind & (abstract new (...args: never[]) => Resource))[] = [
   Zone,
   D1,
   DnsRecord,
+  RedirectRule,
   Worker,
 ];
 
@@ -75,8 +77,7 @@ export async function deploy(run: Run): Promise<void> {
     const [match] = matches;
     // danku only touches what it created: a resource that already has the name it would create
     // stops the deploy before any change. Only kinds with unique names list untagged ones, and
-    // only kinds that exist before danku runs (zones, hand-made DNS records) adopt the untagged one
-    // instead. One this project owns under a label no longer declared was renamed in deploy.ts
+    // only kinds that exist before danku runs (zones) adopt the untagged one instead. One this project owns under a label no longer declared was renamed in deploy.ts
     // (possible where the label isn't part of the cloud name): it's taken over, not refused.
     const taken = match
       ? undefined
@@ -91,7 +92,7 @@ export async function deploy(run: Run): Promise<void> {
         `${label}: ${name} already exists, ` +
           (taken.owner
             ? `and belongs to the danku project "${taken.owner.project}"`
-            : "but danku didn't create it (it has no danku tags); remove it or rename the resource in danku/deploy.ts"),
+            : "but danku didn't create it; remove it, or change danku/deploy.ts so they don't clash"),
       );
     }
     if (!match && !taken && !resource.create) {

@@ -22,9 +22,9 @@ export interface Kind {
   /** Applied only when CI=true; in dev, local tools (wrangler/miniflare) provide it. */
   ciOnly: boolean;
   /**
-   * For kinds that exist before danku runs: zones (you register the domain) and DNS records added by
-   * hand. An untagged one with the declared cloud name (for a record: type, name and content) is
-   * adopted (tagged) instead of refused. Other kinds only ever touch what danku created.
+   * For kinds that exist before danku runs and that it never creates: zones (you register the
+   * domain). An untagged one with the declared cloud name is adopted (tagged) instead of refused.
+   * Other kinds only ever touch what danku created.
    */
   adopt?: boolean;
   /**
@@ -99,7 +99,7 @@ export abstract class Resource<Inputs = unknown, Outputs = unknown> {
    */
   check?(): void;
 
-  /** Where it can be reached once deployed, printed with its plan line (a Worker's app URL). */
+  /** Where it leads once deployed, printed with its plan line: a Worker's app, a redirect's target. */
   url?(project: string): string | undefined;
 
   /**

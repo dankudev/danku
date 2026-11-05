@@ -7,17 +7,23 @@ import { defineConfig } from "kubb/config";
 process.env.KUBB_DISABLE_TELEMETRY = "1";
 
 const include = [
+  "createZoneRuleset",
+  "createZoneRulesetRule",
   "d1-create-database",
   "d1-list-databases",
+  "deleteZoneRulesetRule",
   "dns-records-for-a-zone-create-dns-record",
   "dns-records-for-a-zone-delete-dns-record",
   "dns-records-for-a-zone-list-dns-records",
   "dns-records-for-a-zone-update-dns-record",
+  "getZoneRuleset",
+  "listZoneRulesets",
   "tags-get",
   "tags-set",
   "tags-list",
   "tags-zone-get",
   "tags-zone-set",
+  "updateZoneRulesetRule",
   "worker-script-delete-worker",
   "worker-script-list-workers",
   "worker-subdomain-get-subdomain",

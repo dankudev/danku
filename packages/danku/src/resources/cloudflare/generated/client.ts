@@ -4,7 +4,7 @@
 */
 
 import type { ClientConfig, ClientInstance, Options, Unwrappable, RequestResult } from './.kubb/client.ts'
-import type { D1ListDatabasesOptions, D1ListDatabasesResponses, D1CreateDatabaseOptions, D1CreateDatabaseResponses, TagsGetOptions, TagsGetResponses, TagsSetOptions, TagsSetResponses, TagsListOptions, TagsListResponses, WorkersDomainsListOptions, WorkersDomainsListResponses, WorkersDomainsDeleteOptions, WorkersDomainsDeleteResponses, WorkerScriptListWorkersOptions, WorkerScriptListWorkersResponses, WorkerScriptDeleteWorkerOptions, WorkerScriptDeleteWorkerResponses, WorkerSubdomainGetSubdomainOptions, WorkerSubdomainGetSubdomainResponses, ZonesGetOptions, ZonesGetResponses, DnsRecordsForAZoneListDnsRecordsOptions, DnsRecordsForAZoneListDnsRecordsResponses, DnsRecordsForAZoneCreateDnsRecordOptions, DnsRecordsForAZoneCreateDnsRecordResponses, DnsRecordsForAZoneDeleteDnsRecordOptions, DnsRecordsForAZoneDeleteDnsRecordResponses, DnsRecordsForAZoneUpdateDnsRecordOptions, DnsRecordsForAZoneUpdateDnsRecordResponses, TagsZoneGetOptions, TagsZoneGetResponses, TagsZoneSetOptions, TagsZoneSetResponses } from './types.ts'
+import type { D1ListDatabasesOptions, D1ListDatabasesResponses, D1CreateDatabaseOptions, D1CreateDatabaseResponses, TagsGetOptions, TagsGetResponses, TagsSetOptions, TagsSetResponses, TagsListOptions, TagsListResponses, WorkersDomainsListOptions, WorkersDomainsListResponses, WorkersDomainsDeleteOptions, WorkersDomainsDeleteResponses, WorkerScriptListWorkersOptions, WorkerScriptListWorkersResponses, WorkerScriptDeleteWorkerOptions, WorkerScriptDeleteWorkerResponses, WorkerSubdomainGetSubdomainOptions, WorkerSubdomainGetSubdomainResponses, ZonesGetOptions, ZonesGetResponses, DnsRecordsForAZoneListDnsRecordsOptions, DnsRecordsForAZoneListDnsRecordsResponses, DnsRecordsForAZoneCreateDnsRecordOptions, DnsRecordsForAZoneCreateDnsRecordResponses, DnsRecordsForAZoneDeleteDnsRecordOptions, DnsRecordsForAZoneDeleteDnsRecordResponses, DnsRecordsForAZoneUpdateDnsRecordOptions, DnsRecordsForAZoneUpdateDnsRecordResponses, ListZoneRulesetsOptions, ListZoneRulesetsResponses, CreateZoneRulesetOptions, CreateZoneRulesetResponses, GetZoneRulesetOptions, GetZoneRulesetResponses, CreateZoneRulesetRuleOptions, CreateZoneRulesetRuleResponses, DeleteZoneRulesetRuleOptions, DeleteZoneRulesetRuleResponses, UpdateZoneRulesetRuleOptions, UpdateZoneRulesetRuleResponses, TagsZoneGetOptions, TagsZoneGetResponses, TagsZoneSetOptions, TagsZoneSetResponses } from './types.ts'
 import { createClient, withUnwrap } from './.kubb/client.ts'
 
 export class CloudflareClient {
@@ -188,6 +188,72 @@ export class CloudflareClient {
     const { client: request = this.client, ...config } = options
 
     return withUnwrap(request({ method: 'PUT', url: '/zones/{zone_id}/dns_records/{dns_record_id}', security: [{ type: 'http', scheme: 'bearer' }, { type: 'apiKey', name: 'X-Auth-Email', in: 'header' }, { type: 'apiKey', name: 'X-Auth-Key', in: 'header' }], contentType: { request: 'application/json' }, ...config, throwOnError: config.throwOnError ?? true }) as Promise<RequestResult<DnsRecordsForAZoneUpdateDnsRecordResponses, ThrowOnError>>)
+  }
+
+/**
+   * @description Fetches all rulesets at the zone level.
+   * @summary List zone rulesets
+   * {@link /zones/:zone_id/rulesets}
+   */
+    public listZoneRulesets<ThrowOnError extends boolean = true>(options: Options<ListZoneRulesetsOptions, ThrowOnError>): Unwrappable<RequestResult<ListZoneRulesetsResponses, ThrowOnError>> {
+    const { client: request = this.client, ...config } = options
+
+    return withUnwrap(request({ method: 'GET', url: '/zones/{zone_id}/rulesets', security: [{ type: 'http', scheme: 'bearer' }, { type: 'apiKey', name: 'X-Auth-Email', in: 'header' }, { type: 'apiKey', name: 'X-Auth-Key', in: 'header' }], ...config, throwOnError: config.throwOnError ?? true }) as Promise<RequestResult<ListZoneRulesetsResponses, ThrowOnError>>)
+  }
+
+/**
+   * @description Creates a ruleset at the zone level.
+   * @summary Create a zone ruleset
+   * {@link /zones/:zone_id/rulesets}
+   */
+    public createZoneRuleset<ThrowOnError extends boolean = true>(options: Options<CreateZoneRulesetOptions, ThrowOnError>): Unwrappable<RequestResult<CreateZoneRulesetResponses, ThrowOnError>> {
+    const { client: request = this.client, ...config } = options
+
+    return withUnwrap(request({ method: 'POST', url: '/zones/{zone_id}/rulesets', security: [{ type: 'http', scheme: 'bearer' }, { type: 'apiKey', name: 'X-Auth-Email', in: 'header' }, { type: 'apiKey', name: 'X-Auth-Key', in: 'header' }], contentType: { request: 'application/json' }, ...config, throwOnError: config.throwOnError ?? true }) as Promise<RequestResult<CreateZoneRulesetResponses, ThrowOnError>>)
+  }
+
+/**
+   * @description Fetches the latest version of a zone ruleset.
+   * @summary Get a zone ruleset
+   * {@link /zones/:zone_id/rulesets/:ruleset_id}
+   */
+    public getZoneRuleset<ThrowOnError extends boolean = true>(options: Options<GetZoneRulesetOptions, ThrowOnError>): Unwrappable<RequestResult<GetZoneRulesetResponses, ThrowOnError>> {
+    const { client: request = this.client, ...config } = options
+
+    return withUnwrap(request({ method: 'GET', url: '/zones/{zone_id}/rulesets/{ruleset_id}', security: [{ type: 'http', scheme: 'bearer' }, { type: 'apiKey', name: 'X-Auth-Email', in: 'header' }, { type: 'apiKey', name: 'X-Auth-Key', in: 'header' }], ...config, throwOnError: config.throwOnError ?? true }) as Promise<RequestResult<GetZoneRulesetResponses, ThrowOnError>>)
+  }
+
+/**
+   * @description Adds a new rule to a zone ruleset. The rule will be added to the end of the existing list of rules in the ruleset by default.
+   * @summary Create a zone ruleset rule
+   * {@link /zones/:zone_id/rulesets/:ruleset_id/rules}
+   */
+    public createZoneRulesetRule<ThrowOnError extends boolean = true>(options: Options<CreateZoneRulesetRuleOptions, ThrowOnError>): Unwrappable<RequestResult<CreateZoneRulesetRuleResponses, ThrowOnError>> {
+    const { client: request = this.client, ...config } = options
+
+    return withUnwrap(request({ method: 'POST', url: '/zones/{zone_id}/rulesets/{ruleset_id}/rules', security: [{ type: 'http', scheme: 'bearer' }, { type: 'apiKey', name: 'X-Auth-Email', in: 'header' }, { type: 'apiKey', name: 'X-Auth-Key', in: 'header' }], contentType: { request: 'application/json' }, ...config, throwOnError: config.throwOnError ?? true }) as Promise<RequestResult<CreateZoneRulesetRuleResponses, ThrowOnError>>)
+  }
+
+/**
+   * @description Deletes an existing rule from a zone ruleset.
+   * @summary Delete a zone ruleset rule
+   * {@link /zones/:zone_id/rulesets/:ruleset_id/rules/:rule_id}
+   */
+    public deleteZoneRulesetRule<ThrowOnError extends boolean = true>(options: Options<DeleteZoneRulesetRuleOptions, ThrowOnError>): Unwrappable<RequestResult<DeleteZoneRulesetRuleResponses, ThrowOnError>> {
+    const { client: request = this.client, ...config } = options
+
+    return withUnwrap(request({ method: 'DELETE', url: '/zones/{zone_id}/rulesets/{ruleset_id}/rules/{rule_id}', security: [{ type: 'http', scheme: 'bearer' }, { type: 'apiKey', name: 'X-Auth-Email', in: 'header' }, { type: 'apiKey', name: 'X-Auth-Key', in: 'header' }], ...config, throwOnError: config.throwOnError ?? true }) as Promise<RequestResult<DeleteZoneRulesetRuleResponses, ThrowOnError>>)
+  }
+
+/**
+   * @description Updates an existing rule in a zone ruleset.
+   * @summary Update a zone ruleset rule
+   * {@link /zones/:zone_id/rulesets/:ruleset_id/rules/:rule_id}
+   */
+    public updateZoneRulesetRule<ThrowOnError extends boolean = true>(options: Options<UpdateZoneRulesetRuleOptions, ThrowOnError>): Unwrappable<RequestResult<UpdateZoneRulesetRuleResponses, ThrowOnError>> {
+    const { client: request = this.client, ...config } = options
+
+    return withUnwrap(request({ method: 'PATCH', url: '/zones/{zone_id}/rulesets/{ruleset_id}/rules/{rule_id}', security: [{ type: 'http', scheme: 'bearer' }, { type: 'apiKey', name: 'X-Auth-Email', in: 'header' }, { type: 'apiKey', name: 'X-Auth-Key', in: 'header' }], contentType: { request: 'application/json' }, ...config, throwOnError: config.throwOnError ?? true }) as Promise<RequestResult<UpdateZoneRulesetRuleResponses, ThrowOnError>>)
   }
 
 /**
